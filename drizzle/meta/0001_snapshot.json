@@ -50,13 +50,13 @@
           "name": "actor_login",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "body": {
           "name": "body",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "completed_at": {
           "name": "completed_at",
@@ -111,7 +111,7 @@
           "name": "received_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "repository_name": {
           "name": "repository_name",

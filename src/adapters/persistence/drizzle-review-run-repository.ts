@@ -58,6 +58,25 @@ export class DrizzleReviewRunRepository implements ReviewRunRepository {
     return "terminal";
   }
 
+  public async recoverStaleProcessing(
+    id: string,
+    expectedStartedAt: string,
+  ): Promise<boolean> {
+    const updated = await this.db
+      .update(reviewRunsTable)
+      .set({ status: "pending", startedAt: null, errorMessage: null })
+      .where(
+        and(
+          eq(reviewRunsTable.id, id),
+          eq(reviewRunsTable.status, "processing"),
+          eq(reviewRunsTable.startedAt, new Date(expectedStartedAt)),
+        ),
+      )
+      .returning({ id: reviewRunsTable.id });
+
+    return updated.length > 0;
+  }
+
   public async findById(id: string): Promise<ReviewRun | null> {
     const rows = await this.db
       .select()
@@ -164,12 +183,12 @@ function toDomain(row: ReviewRunRow): ReviewRun {
     actionability: row.actionability,
     createdAt: row.createdAt.toISOString(),
     event: {
-      actorLogin: row.actorLogin,
-      body: row.body,
+      actorLogin: row.actorLogin ?? "",
+      body: row.body ?? "",
       headSha: row.headSha,
       kind: row.kind as ReviewEventKind,
       pullRequestNumber: row.pullRequestNumber,
-      receivedAt: row.receivedAt.toISOString(),
+      receivedAt: (row.receivedAt ?? row.createdAt).toISOString(),
       repository: {
         name: row.repositoryName,
         owner: row.repositoryOwner,

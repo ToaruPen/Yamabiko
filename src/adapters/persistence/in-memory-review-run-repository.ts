@@ -35,6 +35,27 @@ export class InMemoryReviewRunRepository implements ReviewRunRepository {
     return Promise.resolve("claimed");
   }
 
+  public recoverStaleProcessing(
+    id: string,
+    expectedStartedAt: string,
+  ): Promise<boolean> {
+    const current = this.runs.get(id);
+
+    if (
+      current === undefined ||
+      current.status !== "processing" ||
+      current.startedAt !== expectedStartedAt
+    ) {
+      return Promise.resolve(false);
+    }
+
+    const recovered: ReviewRun = { ...current, status: "pending" };
+    delete recovered.startedAt;
+    delete recovered.errorMessage;
+    this.runs.set(id, recovered);
+    return Promise.resolve(true);
+  }
+
   public findById(id: string): Promise<ReviewRun | null> {
     return Promise.resolve(this.runs.get(id) ?? null);
   }

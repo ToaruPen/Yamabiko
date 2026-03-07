@@ -30,13 +30,15 @@ async function recoverStaleRuns(
 
     const elapsed = now - new Date(run.startedAt).getTime();
     if (elapsed > STALE_PROCESSING_THRESHOLD_MS) {
-      await repository.updateStatus(run.id, "pending", {
-        startedAt: null,
-        errorMessage: null,
-      });
-      console.log(
-        `Recovered stale processing run ${run.id} (stuck for ${String(Math.round(elapsed / 1000))}s)`,
+      const recovered = await repository.recoverStaleProcessing(
+        run.id,
+        run.startedAt,
       );
+      if (recovered) {
+        console.log(
+          `Recovered stale processing run ${run.id} (stuck for ${String(Math.round(elapsed / 1000))}s)`,
+        );
+      }
     }
   }
 }

@@ -10,6 +10,10 @@ export interface ReviewRunRepository {
   claimForProcessing(id: string, startedAt: string): Promise<ClaimResult>;
   findById(id: string): Promise<ReviewRun | null>;
   findByStatus(status: RunStatus): Promise<ReviewRun[]>;
+  recoverStaleProcessing(
+    id: string,
+    expectedStartedAt: string,
+  ): Promise<boolean>;
   save(run: ReviewRun): Promise<void>;
   updateStatus(
     id: string,

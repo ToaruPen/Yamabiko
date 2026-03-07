@@ -19,8 +19,8 @@ export const runStatusEnum = pgEnum("run_status", RUN_STATUSES);
 
 export const reviewRunsTable = pgTable("review_runs", {
   actionability: reviewActionabilityEnum("actionability").notNull(),
-  actorLogin: text("actor_login").notNull(),
-  body: text("body").notNull(),
+  actorLogin: text("actor_login"),
+  body: text("body"),
   completedAt: timestamp("completed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   errorMessage: text("error_message"),
@@ -29,7 +29,7 @@ export const reviewRunsTable = pgTable("review_runs", {
   kind: text("kind").notNull(),
   mode: runModeEnum("mode").notNull(),
   pullRequestNumber: integer("pull_request_number").notNull(),
-  receivedAt: timestamp("received_at", { withTimezone: true }).notNull(),
+  receivedAt: timestamp("received_at", { withTimezone: true }),
   repositoryName: text("repository_name").notNull(),
   repositoryOwner: text("repository_owner").notNull(),
   startedAt: timestamp("started_at", { withTimezone: true }),
