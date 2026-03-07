@@ -2,6 +2,8 @@ import type { ReviewRunRepository } from "../application/ports/review-run-reposi
 import type { ReviewJobPayload } from "../contracts/review-job-payload.js";
 import type { JobLogger } from "./job-logger.js";
 
+const UPDATABLE_STATUSES = new Set(["pending", "processing"]);
+
 export interface HandleDeadLetterDependencies {
   reviewRunRepository: ReviewRunRepository;
   logger: JobLogger;
@@ -17,13 +19,13 @@ export async function handleDeadLetter(
     `Job dead-lettered after exhausting retries: ${job.runId}`,
   );
 
-  try {
+  const run = await deps.reviewRunRepository.findById(job.runId);
+
+  if (run !== null && UPDATABLE_STATUSES.has(run.status)) {
     await deps.reviewRunRepository.updateStatus(job.runId, "failed", {
       completedAt: now().toISOString(),
       errorMessage: String(error),
     });
-  } catch {
-    // Run may already be in a terminal state or missing — log and continue.
   }
 
   deps.logger.deadLettered(error);

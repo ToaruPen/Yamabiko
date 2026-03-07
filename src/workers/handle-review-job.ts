@@ -30,7 +30,7 @@ export async function handleReviewJob(
     return;
   }
 
-  if (claimResult === "terminal") {
+  if (claimResult === "terminal" || claimResult === "already-processing") {
     deps.logger.completed(0);
     return;
   }
@@ -54,7 +54,7 @@ export async function handleReviewJob(
     deps.logger.completed(Date.now() - startedAtMs);
   } catch (error) {
     if (isRetryableError(error)) {
-      await deps.reviewRunRepository.updateStatus(run.id, "processing", {
+      await deps.reviewRunRepository.updateStatus(run.id, "pending", {
         errorMessage: String(error),
       });
       deps.logger.retrying(error, NEXT_ATTEMPT_ON_RETRY);

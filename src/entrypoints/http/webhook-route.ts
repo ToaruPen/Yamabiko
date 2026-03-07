@@ -1,4 +1,4 @@
-import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
+import type { FastifyInstance, FastifyRequest } from "fastify";
 
 import { createDefaultActionabilitySignal } from "../../application/signals/default-actionability-signal.js";
 import { ingestReviewEvent } from "../../application/use-cases/ingest-review-event.js";
@@ -38,14 +38,16 @@ export async function webhookRoute(server: FastifyInstance): Promise<void> {
       });
     }
 
-    const signatureError = await verifyAndReject(
-      server,
+    const isValidSignature = await verifyWebhookSignature(
+      server.config.webhookSecret,
       rawBody,
       headers.signature,
-      reply,
     );
-    if (signatureError !== null) {
-      return signatureError;
+    if (!isValidSignature) {
+      return reply.code(401).send({
+        message: "Invalid signature",
+        status: "error",
+      });
     }
 
     const event = normalizeWebhookEvent(
@@ -95,28 +97,6 @@ function extractRawBody(request: FastifyRequest): string | null {
 
 function extractAction(request: FastifyRequest): string {
   return (request.body as WebhookPayload).action ?? "";
-}
-
-async function verifyAndReject(
-  server: FastifyInstance,
-  rawBody: string,
-  signature: string,
-  reply: FastifyReply,
-): Promise<unknown> {
-  const isValid = await verifyWebhookSignature(
-    server.config.webhookSecret,
-    rawBody,
-    signature,
-  );
-
-  if (!isValid) {
-    return reply.code(401).send({
-      message: "Invalid signature",
-      status: "error",
-    });
-  }
-
-  return null;
 }
 
 function parseWebhookHeaders(

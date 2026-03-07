@@ -212,7 +212,7 @@ describe("handleReviewJob", () => {
     expect(logger.retrying).not.toHaveBeenCalled();
   });
 
-  it("keeps run processing and rethrows retryable errors", async () => {
+  it("resets run to pending and rethrows retryable errors", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-03-07T12:00:00.000Z"));
 
@@ -245,13 +245,13 @@ describe("handleReviewJob", () => {
       ),
     ).rejects.toThrowError("temporary network timeout");
 
-    const processingRun = await reviewRunRepository.findById(run.id);
-    expect(processingRun).toMatchObject({
+    const retryableRun = await reviewRunRepository.findById(run.id);
+    expect(retryableRun).toMatchObject({
       errorMessage: "Error: temporary network timeout",
       startedAt: "2026-03-07T12:00:01.000Z",
-      status: "processing",
+      status: "pending",
     });
-    expect(processingRun?.completedAt).toBeUndefined();
+    expect(retryableRun?.completedAt).toBeUndefined();
     expect(logger.processing).toHaveBeenCalledTimes(1);
     expect(logger.completed).not.toHaveBeenCalled();
     expect(logger.failed).not.toHaveBeenCalled();
@@ -305,7 +305,7 @@ describe("handleReviewJob", () => {
     expect(afterFirstAttempt).toMatchObject({
       errorMessage: "Error: temporary network timeout",
       startedAt: "2026-03-07T12:30:00.100Z",
-      status: "processing",
+      status: "pending",
     });
     expect(afterFirstAttempt?.completedAt).toBeUndefined();
 

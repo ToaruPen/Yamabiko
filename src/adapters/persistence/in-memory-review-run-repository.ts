@@ -28,7 +28,6 @@ export class InMemoryReviewRunRepository implements ReviewRunRepository {
     }
 
     if (current.status === "processing") {
-      this.runs.set(id, { ...current, startedAt, status: "processing" });
       return Promise.resolve("already-processing");
     }
 
@@ -75,14 +74,14 @@ export class InMemoryReviewRunRepository implements ReviewRunRepository {
   }
 }
 
-function filterUndefined(
-  obj?: Record<string, unknown>,
-): Record<string, unknown> {
+function filterUndefined<T extends Record<string, unknown>>(
+  obj?: T,
+): Partial<T> {
   if (obj === undefined) {
     return {};
   }
 
   return Object.fromEntries(
     Object.entries(obj).filter(([, v]) => v !== undefined),
-  );
+  ) as Partial<T>;
 }

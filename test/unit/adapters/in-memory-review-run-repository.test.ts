@@ -103,7 +103,7 @@ describe("InMemoryReviewRunRepository", () => {
       expect(found).toEqual(run);
     });
 
-    it("returns already-processing and updates startedAt for processing run", async () => {
+    it("returns already-processing without modifying run for processing run", async () => {
       const repository = new InMemoryReviewRunRepository();
       const run = createReviewRun("run-retry", {
         startedAt: "2026-03-07T09:00:00.000Z",
@@ -119,10 +119,7 @@ describe("InMemoryReviewRunRepository", () => {
       expect(result).toBe("already-processing");
 
       const found = await repository.findById("run-retry");
-      expect(found).toEqual({
-        ...run,
-        startedAt: "2026-03-07T10:00:00.000Z",
-      });
+      expect(found).toEqual(run);
     });
   });
 
