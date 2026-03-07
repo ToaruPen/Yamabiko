@@ -56,9 +56,7 @@ export async function webhookRoute(server: FastifyInstance): Promise<void> {
     );
 
     if (event === null) {
-      return reply.code(200).send({
-        status: "ignored",
-      });
+      return reply.code(204).send();
     }
 
     const result = await ingestReviewEvent(
@@ -115,8 +113,8 @@ function parseWebhookHeaders(
   const signature = readHeader(headers["x-hub-signature-256"]);
   if (signature === null) {
     return {
-      message: "Missing signature",
-      statusCode: 401,
+      message: "Missing X-Hub-Signature-256 header",
+      statusCode: 400,
     };
   }
 

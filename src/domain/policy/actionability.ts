@@ -1,4 +1,5 @@
-export type ReviewActionability = "ignore" | "suggest" | "apply";
+export const ACTIONABILITIES = ["ignore", "suggest", "apply"] as const;
+export type ReviewActionability = (typeof ACTIONABILITIES)[number];
 
 export interface ActionabilitySignal {
   hasBoundedChange: boolean;

@@ -1,5 +1,5 @@
 {
-  "id": "23e5486e-6205-49e6-989e-92599a0ba2bd",
+  "id": "3f73d186-07d0-4abf-84cd-aada47222bfa",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -68,7 +68,7 @@
           "name": "head_sha",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "id": {
           "name": "id",
@@ -91,7 +91,7 @@
         },
         "pull_request_number": {
           "name": "pull_request_number",
-          "type": "text",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },

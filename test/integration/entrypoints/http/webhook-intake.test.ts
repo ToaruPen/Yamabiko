@@ -1,4 +1,3 @@
-import { createHmac } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { InMemoryDeliveryRepository } from "../../../../src/adapters/persistence/in-memory-delivery-repository.js";
@@ -10,6 +9,7 @@ import {
   pullRequestReviewCommentPayload,
   pullRequestReviewPayload,
 } from "../../../fixtures/webhooks/index.js";
+import { signPayload } from "../../../helpers/sign-payload.js";
 
 const WEBHOOK_SECRET = "integration-test-secret";
 
@@ -26,10 +26,6 @@ interface AcceptedResponseBody {
   enqueued: boolean;
   runId: string | null;
   status: "accepted";
-}
-
-function signPayload(secret: string, payload: string): string {
-  return `sha256=${createHmac("sha256", secret).update(payload).digest("hex")}`;
 }
 
 describe("webhook intake integration", () => {
@@ -358,10 +354,7 @@ describe("webhook intake integration", () => {
       url: "/webhook",
     });
 
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({
-      status: "ignored",
-    });
+    expect(response.statusCode).toBe(204);
     expect(
       await deliveryRepository.findById("delivery-unsupported-event"),
     ).toBeNull();
@@ -442,10 +435,7 @@ describe("webhook intake integration", () => {
       url: "/webhook",
     });
 
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({
-      status: "ignored",
-    });
+    expect(response.statusCode).toBe(204);
     expect(
       await deliveryRepository.findById("delivery-unsupported-action"),
     ).toBeNull();

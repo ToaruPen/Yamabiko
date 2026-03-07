@@ -1,11 +1,7 @@
-import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
 
 import { verifyWebhookSignature } from "../../../../src/entrypoints/http/verify-webhook-signature.js";
-
-function signPayload(secret: string, payload: string): string {
-  return `sha256=${createHmac("sha256", secret).update(payload).digest("hex")}`;
-}
+import { signPayload } from "../../../helpers/sign-payload.js";
 
 describe("verifyWebhookSignature", () => {
   it("returns true for a valid signature", async () => {

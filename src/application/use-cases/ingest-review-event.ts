@@ -37,6 +37,9 @@ export async function ingestReviewEvent(
   dependencies: IngestReviewEventDependencies,
   input: IngestReviewEventInput,
 ): Promise<IngestReviewEventResult> {
+  // TODO: Replace with atomic insert-or-conflict check (DB unique constraint on delivery_id)
+  // when switching from in-memory to Postgres adapter. Current check-then-insert is not
+  // race-safe under concurrent delivery of the same webhook event.
   const duplicate = await dependencies.deliveryRepository.existsById(
     input.deliveryId,
   );
@@ -58,6 +61,8 @@ export async function ingestReviewEvent(
     receivedAt: input.event.receivedAt,
   };
 
+  // TODO: Wrap delivery + run + enqueue in a transaction (or outbox pattern)
+  // so partial failures don't leave orphaned deliveries that block retries.
   await dependencies.deliveryRepository.save(delivery);
 
   const createdAt = (dependencies.now ?? (() => new Date()))().toISOString();

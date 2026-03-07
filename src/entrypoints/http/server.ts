@@ -8,14 +8,11 @@ const server = buildServer(process.env, {
   reviewJobQueue: new InMemoryReviewJobQueue(),
   reviewRunRepository: new InMemoryReviewRunRepository(),
 });
-const runtimeEnv = process.env;
-const host = runtimeEnv.HOST ?? "127.0.0.1";
-const port = Number(runtimeEnv.PORT ?? "3000");
 
 try {
   await server.listen({
-    host,
-    port,
+    host: server.config.host,
+    port: server.config.port,
   });
 } catch (error) {
   server.log.error(error);

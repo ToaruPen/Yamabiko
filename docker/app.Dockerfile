@@ -10,4 +10,8 @@ RUN if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile; else pnpm ins
 
 COPY . .
 
+RUN addgroup -g 1001 -S appgroup && adduser -u 1001 -S appuser -G appgroup
+RUN chown -R appuser:appgroup /app
+USER appuser
+
 CMD ["pnpm", "dev"]

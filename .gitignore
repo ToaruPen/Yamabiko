@@ -17,3 +17,6 @@ __pycache__/
 
 # Lefthook
 lefthook-local.yml
+
+# Sisyphus runtime state
+.sisyphus/boulder.json

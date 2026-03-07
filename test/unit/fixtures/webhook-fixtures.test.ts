@@ -3,7 +3,7 @@ import {
   issueCommentPayload,
   pullRequestReviewCommentPayload,
   pullRequestReviewPayload,
-} from "../../../test/fixtures/webhooks/index.js";
+} from "../../fixtures/webhooks/index.js";
 
 interface MinimalWebhookPayload {
   action: string;

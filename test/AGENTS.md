@@ -10,6 +10,6 @@
 
 ## HOW
 - Prefer explicit assertions over snapshots.
-- Keep unit tests deterministic and side-effect free.
+- Keep unit tests deterministic and side-effect-free.
 - Name test files with the `*.test.ts` suffix.
 - Integration tests may compose multiple modules, but should still avoid real GitHub or database calls unless a dedicated fixture/setup is added.

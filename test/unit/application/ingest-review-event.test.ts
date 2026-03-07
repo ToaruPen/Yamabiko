@@ -67,6 +67,55 @@ describe("ingestReviewEvent", () => {
     expect(reviewJobQueue.snapshot()).toHaveLength(1);
   });
 
+  it("saves run but does not enqueue when headSha is null", async () => {
+    const deliveryRepository = new InMemoryDeliveryRepository();
+    const reviewRunRepository = new InMemoryReviewRunRepository();
+    const reviewJobQueue = new InMemoryReviewJobQueue();
+
+    const result = await ingestReviewEvent(
+      {
+        deliveryRepository,
+        now: () => new Date("2026-03-07T00:00:00.000Z"),
+        reviewJobQueue,
+        reviewRunRepository,
+      },
+      {
+        deliveryId: "delivery-null-sha",
+        event: {
+          actorLogin: "codex-bot",
+          body: "Please fix the lint error.",
+          headSha: null,
+          kind: "issue_comment",
+          pullRequestNumber: 12,
+          receivedAt: "2026-03-07T00:00:00.000Z",
+          repository: {
+            name: "Call-n-Response",
+            owner: "ToaruPen",
+          },
+        },
+        mode: "suggest-only",
+        signal: {
+          hasBoundedChange: true,
+          hasConcreteTarget: true,
+          requiresHiddenContext: false,
+          requiresUnsafeSideEffects: false,
+          trustedExecution: false,
+        },
+      },
+    );
+
+    expect(result.actionability).toBe("suggest");
+    expect(result.duplicate).toBe(false);
+    expect(result.enqueued).toBe(false);
+    expect(result.runId).not.toBeNull();
+    expect(reviewJobQueue.snapshot()).toHaveLength(0);
+
+    if (result.runId !== null) {
+      const savedRun = await reviewRunRepository.findById(result.runId);
+      expect(savedRun).not.toBeNull();
+    }
+  });
+
   it("marks ignored review feedback as skipped and does not enqueue", async () => {
     const deliveryRepository = new InMemoryDeliveryRepository();
     const reviewRunRepository = new InMemoryReviewRunRepository();
