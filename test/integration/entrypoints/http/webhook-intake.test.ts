@@ -129,6 +129,7 @@ describe("webhook intake integration", () => {
     expect(savedRun).not.toBeNull();
     expect(savedRun?.event.kind).toBe("pull_request_review");
     expect(savedRun?.event.headSha).toBe("abc123def456");
+    expect(savedRun?.status).toBe("pending");
 
     const jobs = reviewJobQueue.snapshot();
     expect(jobs).toHaveLength(1);
@@ -191,6 +192,7 @@ describe("webhook intake integration", () => {
     expect(savedRun).not.toBeNull();
     expect(savedRun?.event.kind).toBe("issue_comment");
     expect(savedRun?.event.headSha).toBeNull();
+    expect(savedRun?.status).toBe("pending");
 
     expect(reviewJobQueue.snapshot()).toHaveLength(0);
   });
@@ -241,6 +243,7 @@ describe("webhook intake integration", () => {
     const savedRun = await reviewRunRepository.findById(responseBody.runId);
     expect(savedRun).not.toBeNull();
     expect(savedRun?.event.kind).toBe("pull_request_review_comment");
+    expect(savedRun?.status).toBe("pending");
 
     const jobs = reviewJobQueue.snapshot();
     expect(jobs).toHaveLength(1);

@@ -69,6 +69,7 @@ export async function ingestReviewEvent(
     event: input.event,
     id: runId,
     mode: input.mode,
+    status: actionability === "ignore" ? "skipped" : "pending",
   };
 
   await dependencies.reviewRunRepository.save(run);
