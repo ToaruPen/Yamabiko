@@ -51,6 +51,81 @@ describe("InMemoryReviewRunRepository", () => {
     ).rejects.toThrowError("ReviewRun not found: missing-run");
   });
 
+  describe("claimForProcessing", () => {
+    it("claims a pending run and transitions to processing", async () => {
+      const repository = new InMemoryReviewRunRepository();
+      const run = createReviewRun("run-claim", { status: "pending" });
+      await repository.save(run);
+
+      const result = await repository.claimForProcessing(
+        "run-claim",
+        "2026-03-07T10:00:00.000Z",
+      );
+
+      expect(result).toBe("claimed");
+
+      const found = await repository.findById("run-claim");
+      expect(found).toEqual({
+        ...run,
+        startedAt: "2026-03-07T10:00:00.000Z",
+        status: "processing",
+      });
+    });
+
+    it("returns missing when run does not exist", async () => {
+      const repository = new InMemoryReviewRunRepository();
+
+      const result = await repository.claimForProcessing(
+        "nonexistent",
+        "2026-03-07T10:00:00.000Z",
+      );
+
+      expect(result).toBe("missing");
+    });
+
+    it.each([
+      "completed",
+      "failed",
+      "skipped",
+    ] as const)("returns terminal when run status is %s", async (status) => {
+      const repository = new InMemoryReviewRunRepository();
+      const run = createReviewRun("run-terminal", { status });
+      await repository.save(run);
+
+      const result = await repository.claimForProcessing(
+        "run-terminal",
+        "2026-03-07T10:00:00.000Z",
+      );
+
+      expect(result).toBe("terminal");
+
+      const found = await repository.findById("run-terminal");
+      expect(found).toEqual(run);
+    });
+
+    it("returns already-processing and updates startedAt for processing run", async () => {
+      const repository = new InMemoryReviewRunRepository();
+      const run = createReviewRun("run-retry", {
+        startedAt: "2026-03-07T09:00:00.000Z",
+        status: "processing",
+      });
+      await repository.save(run);
+
+      const result = await repository.claimForProcessing(
+        "run-retry",
+        "2026-03-07T10:00:00.000Z",
+      );
+
+      expect(result).toBe("already-processing");
+
+      const found = await repository.findById("run-retry");
+      expect(found).toEqual({
+        ...run,
+        startedAt: "2026-03-07T10:00:00.000Z",
+      });
+    });
+  });
+
   it("findByStatus returns all matching runs", async () => {
     const repository = new InMemoryReviewRunRepository();
 

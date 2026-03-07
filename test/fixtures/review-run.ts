@@ -2,7 +2,7 @@ import type { ReviewRun } from "../../src/domain/runs/review-run.js";
 
 export function createReviewRun(
   id: string,
-  overrides: Partial<ReviewRun> = {},
+  overrides: Partial<Omit<ReviewRun, "id">> = {},
 ): ReviewRun {
   return {
     actionability: "suggest",

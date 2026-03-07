@@ -90,6 +90,9 @@ export async function ingestReviewEvent(
     };
   }
 
+  // Type guard: ensures headSha is narrowed to string for job payload construction.
+  // Logically unreachable because shouldEnqueue requires headSha !== null,
+  // but kept as a safety net for future condition changes.
   if (input.event.headSha === null) {
     throw new Error(
       "Unreachable: headSha is null despite shouldEnqueue being true",

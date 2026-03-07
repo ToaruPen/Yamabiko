@@ -13,6 +13,10 @@ pre-commit:
     typecheck:
       run: pnpm typecheck
       priority: 3
+
+pre-push:
+  piped: true
+  commands:
     test:
       run: pnpm test
-      priority: 4
+      priority: 1

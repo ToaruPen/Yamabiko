@@ -21,7 +21,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check": "pnpm lint && pnpm test",
-    "simplify": "bash scripts/simplify.sh"
+    "simplify": "bash .sisyphus/scripts/simplify.sh"
   },
   "dependencies": {
     "@octokit/webhooks": "^14.2.0",

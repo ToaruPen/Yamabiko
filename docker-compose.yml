@@ -8,7 +8,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/yamabiko
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-yamabiko}
       HOST: 0.0.0.0
       PORT: "3000"
       RUN_MODE: dry-run
@@ -24,24 +24,24 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/yamabiko
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-yamabiko}
       RUN_MODE: dry-run
 
   postgres:
     image: postgres:17-alpine
     environment:
-      POSTGRES_DB: yamabiko
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_USER: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-yamabiko}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d yamabiko"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-yamabiko}"]
       interval: 5s
       timeout: 5s
       retries: 10
     ports:
       - "5432:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - yamabiko-data:/var/lib/postgresql/data
 
 volumes:
-  postgres-data: {}
+  yamabiko-data: {}

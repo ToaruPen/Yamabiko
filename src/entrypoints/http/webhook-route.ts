@@ -1,4 +1,4 @@
-import type { FastifyInstance, FastifyRequest } from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
 import { createDefaultActionabilitySignal } from "../../application/signals/default-actionability-signal.js";
 import { ingestReviewEvent } from "../../application/use-cases/ingest-review-event.js";
@@ -30,24 +30,27 @@ export async function webhookRoute(server: FastifyInstance): Promise<void> {
       });
     }
 
-    const rawBody = request.rawBody ?? "";
-    const isValidSignature = await verifyWebhookSignature(
-      server.config.webhookSecret,
-      rawBody,
-      headers.signature,
-    );
-
-    if (!isValidSignature) {
-      return reply.code(401).send({
-        message: "Invalid signature",
+    const rawBody = extractRawBody(request);
+    if (rawBody === null) {
+      return reply.code(500).send({
+        message: "Raw body capture is not configured",
         status: "error",
       });
     }
 
-    const action = (request.body as WebhookPayload).action;
+    const signatureError = await verifyAndReject(
+      server,
+      rawBody,
+      headers.signature,
+      reply,
+    );
+    if (signatureError !== null) {
+      return signatureError;
+    }
+
     const event = normalizeWebhookEvent(
       headers.eventType,
-      action ?? "",
+      extractAction(request),
       request.body,
     );
 
@@ -84,6 +87,36 @@ export async function webhookRoute(server: FastifyInstance): Promise<void> {
     });
   });
   await Promise.resolve();
+}
+
+function extractRawBody(request: FastifyRequest): string | null {
+  return request.rawBody ?? null;
+}
+
+function extractAction(request: FastifyRequest): string {
+  return (request.body as WebhookPayload).action ?? "";
+}
+
+async function verifyAndReject(
+  server: FastifyInstance,
+  rawBody: string,
+  signature: string,
+  reply: FastifyReply,
+): Promise<unknown> {
+  const isValid = await verifyWebhookSignature(
+    server.config.webhookSecret,
+    rawBody,
+    signature,
+  );
+
+  if (!isValid) {
+    return reply.code(401).send({
+      message: "Invalid signature",
+      status: "error",
+    });
+  }
+
+  return null;
 }
 
 function parseWebhookHeaders(

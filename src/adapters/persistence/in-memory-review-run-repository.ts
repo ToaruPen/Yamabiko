@@ -1,16 +1,43 @@
-import type { ReviewRunRepository } from "../../application/ports/review-run-repository.js";
+import type {
+  ClaimResult,
+  ReviewRunRepository,
+} from "../../application/ports/review-run-repository.js";
 import type { ReviewRun, RunStatus } from "../../domain/runs/review-run.js";
+
+const TERMINAL_STATUSES: ReadonlySet<RunStatus> = new Set([
+  "completed",
+  "failed",
+  "skipped",
+]);
 
 export class InMemoryReviewRunRepository implements ReviewRunRepository {
   private readonly runs = new Map<string, ReviewRun>();
 
-  public findById(id: string): Promise<ReviewRun | null> {
-    return Promise.resolve(this.runs.get(id) ?? null);
+  public claimForProcessing(
+    id: string,
+    startedAt: string,
+  ): Promise<ClaimResult> {
+    const current = this.runs.get(id);
+
+    if (current === undefined) {
+      return Promise.resolve("missing");
+    }
+
+    if (TERMINAL_STATUSES.has(current.status)) {
+      return Promise.resolve("terminal");
+    }
+
+    if (current.status === "processing") {
+      this.runs.set(id, { ...current, startedAt, status: "processing" });
+      return Promise.resolve("already-processing");
+    }
+
+    this.runs.set(id, { ...current, startedAt, status: "processing" });
+    return Promise.resolve("claimed");
   }
 
-  public save(run: ReviewRun): Promise<void> {
-    this.runs.set(run.id, run);
-    return Promise.resolve();
+  public findById(id: string): Promise<ReviewRun | null> {
+    return Promise.resolve(this.runs.get(id) ?? null);
   }
 
   public findByStatus(status: RunStatus): Promise<ReviewRun[]> {
@@ -18,6 +45,11 @@ export class InMemoryReviewRunRepository implements ReviewRunRepository {
       (run) => run.status === status,
     );
     return Promise.resolve(matches);
+  }
+
+  public save(run: ReviewRun): Promise<void> {
+    this.runs.set(run.id, run);
+    return Promise.resolve();
   }
 
   public updateStatus(
@@ -35,21 +67,22 @@ export class InMemoryReviewRunRepository implements ReviewRunRepository {
       return Promise.reject(new Error(`ReviewRun not found: ${id}`));
     }
 
-    const updatedRun: ReviewRun = {
-      ...current,
-      status,
-      ...(metadata?.startedAt !== undefined
-        ? { startedAt: metadata.startedAt }
-        : {}),
-      ...(metadata?.completedAt !== undefined
-        ? { completedAt: metadata.completedAt }
-        : {}),
-      ...(metadata?.errorMessage !== undefined
-        ? { errorMessage: metadata.errorMessage }
-        : {}),
-    };
+    const filtered = filterUndefined(metadata);
+    const updatedRun: ReviewRun = { ...current, ...filtered, status };
 
     this.runs.set(id, updatedRun);
     return Promise.resolve();
   }
+}
+
+function filterUndefined(
+  obj?: Record<string, unknown>,
+): Record<string, unknown> {
+  if (obj === undefined) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== undefined),
+  );
 }

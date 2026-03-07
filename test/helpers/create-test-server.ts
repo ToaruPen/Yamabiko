@@ -6,6 +6,7 @@ import { signPayload } from "./sign-payload.js";
 
 export const TEST_WEBHOOK_SECRET = "test-webhook-secret";
 
+// DATABASE_URL is required by loadRuntimeConfig but not used with in-memory adapters
 export const TEST_ENV = {
   DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/yamabiko",
   HOST: "127.0.0.1",

@@ -1,15 +1,8 @@
 import type { FixExecutor } from "../application/ports/fix-executor.js";
 import type { ReviewRunRepository } from "../application/ports/review-run-repository.js";
 import type { ReviewJobPayload } from "../contracts/review-job-payload.js";
-import type { RunStatus } from "../domain/runs/review-run.js";
 import { isRetryableError } from "./failure-classification.js";
 import type { JobLogger } from "./job-logger.js";
-
-const TERMINAL_STATUSES: ReadonlySet<RunStatus> = new Set([
-  "completed",
-  "failed",
-  "skipped",
-]);
 
 const NEXT_ATTEMPT_ON_RETRY = 2;
 
@@ -26,23 +19,29 @@ export async function handleReviewJob(
 ): Promise<void> {
   deps.logger.received();
 
-  const run = await deps.reviewRunRepository.findById(job.runId);
+  const now = deps.now ?? (() => new Date());
+  const claimResult = await deps.reviewRunRepository.claimForProcessing(
+    job.runId,
+    now().toISOString(),
+  );
 
-  if (run === null) {
+  if (claimResult === "missing") {
     deps.logger.failed(new Error(`ReviewRun not found: ${job.runId}`), 0);
     return;
   }
 
-  if (TERMINAL_STATUSES.has(run.status)) {
+  if (claimResult === "terminal") {
     deps.logger.completed(0);
     return;
   }
 
-  const now = deps.now ?? (() => new Date());
-  await deps.reviewRunRepository.updateStatus(run.id, "processing", {
-    startedAt: now().toISOString(),
-  });
   deps.logger.processing();
+
+  const run = await deps.reviewRunRepository.findById(job.runId);
+  if (run === null) {
+    deps.logger.failed(new Error(`ReviewRun disappeared: ${job.runId}`), 0);
+    return;
+  }
 
   const startedAtMs = Date.now();
 

@@ -28,7 +28,17 @@ function createNow(...timestamps: string[]): () => Date {
   let index = 0;
 
   return () => {
-    const current = timestamps[Math.min(index, timestamps.length - 1)];
+    if (index >= timestamps.length) {
+      throw new Error(
+        "createNow called " +
+          String(index + 1) +
+          " times but only " +
+          String(timestamps.length) +
+          " timestamp(s) provided",
+      );
+    }
+
+    const current = timestamps[index];
     index += 1;
 
     if (current === undefined) {
@@ -91,7 +101,11 @@ describe("handleReviewJob", () => {
 
     const execute = vi.fn(
       ({ run: inputRun }: Parameters<FixExecutor["execute"]>[0]) => {
-        expect(inputRun).toEqual(run);
+        expect(inputRun).toEqual({
+          ...run,
+          startedAt: "2026-03-07T10:00:01.000Z",
+          status: "processing",
+        });
         vi.setSystemTime(new Date("2026-03-07T10:00:00.750Z"));
         return Promise.resolve({
           changedFiles: ["src/workers/handle-review-job.ts"],

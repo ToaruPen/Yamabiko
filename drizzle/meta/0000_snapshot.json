@@ -156,7 +156,8 @@
           "name": "processed",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": false
         },
         "received_at": {
           "name": "received_at",

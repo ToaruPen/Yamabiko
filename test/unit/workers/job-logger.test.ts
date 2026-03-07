@@ -150,6 +150,34 @@ describe("createJobLogger", () => {
     expectIsoTimestamp(entry.timestamp);
   });
 
+  it("deadLettered emits serialized error with job.dead_lettered entry", () => {
+    const entries: JobLogEntry[] = [];
+
+    const logger = createJobLogger(
+      { attempt: 3, jobId: "job-7", runId: "run-7" },
+      (entry) => {
+        entries.push(entry);
+      },
+    );
+
+    logger.deadLettered(new Error("poison message"));
+
+    expect(entries).toHaveLength(1);
+    const [entry] = entries;
+    if (entry === undefined) {
+      throw new Error("expected one log entry");
+    }
+
+    expect(entry).toMatchObject({
+      attempt: 3,
+      error: "Error: poison message",
+      event: "job.dead_lettered",
+      jobId: "job-7",
+      runId: "run-7",
+    });
+    expectIsoTimestamp(entry.timestamp);
+  });
+
   it("uses console.log JSON sink by default", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-03-07T13:00:00.000Z"));
