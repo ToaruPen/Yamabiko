@@ -64,11 +64,9 @@ async function main(): Promise<void> {
 
     const parseResult = reviewJobPayloadSchema.safeParse(job.data);
     if (!parseResult.success) {
-      console.error(
-        `Invalid DLQ job payload for job ${job.id}:`,
-        parseResult.error.message,
+      throw new Error(
+        `Invalid DLQ job payload for job ${job.id}: ${parseResult.error.message}`,
       );
-      return;
     }
 
     const payload = parseResult.data;
