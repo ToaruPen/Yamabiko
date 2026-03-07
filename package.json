@@ -1,0 +1,52 @@
+{
+  "name": "call-n-response",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Event-driven automation for responding to GitHub PR review feedback.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@10.23.0",
+  "scripts": {
+    "prepare": "lefthook install",
+    "dev": "pnpm dev:web",
+    "dev:web": "tsx src/entrypoints/http/server.ts",
+    "dev:worker": "tsx src/entrypoints/worker/main.ts",
+    "format": "biome check --write .",
+    "lint:biome": "biome check .",
+    "lint:eslint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "lint": "pnpm lint:biome && pnpm lint:eslint && pnpm typecheck",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "pnpm lint && pnpm test"
+  },
+  "dependencies": {
+    "@octokit/webhooks": "^14.2.0",
+    "drizzle-orm": "^0.45.1",
+    "fastify": "^5.8.1",
+    "octokit": "^5.0.5",
+    "pg": "^8.20.0",
+    "pg-boss": "^12.14.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.6",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.0.0",
+    "drizzle-kit": "^0.31.9",
+    "eslint": "^10.0.3",
+    "globals": "^17.4.0",
+    "lefthook": "^2.1.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.1",
+    "vitest": "^4.0.18"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "lefthook"
+    ]
+  }
+}

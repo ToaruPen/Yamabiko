@@ -1,0 +1,47 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: docker/app.Dockerfile
+    command: ["pnpm", "dev:web"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/call_n_response
+      HOST: 0.0.0.0
+      PORT: "3000"
+      RUN_MODE: dry-run
+    ports:
+      - "3000:3000"
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/app.Dockerfile
+    command: ["pnpm", "dev:worker"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/call_n_response
+      RUN_MODE: dry-run
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: call_n_response
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d call_n_response"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data: {}
