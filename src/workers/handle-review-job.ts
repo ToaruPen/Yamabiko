@@ -4,8 +4,6 @@ import type { ReviewJobPayload } from "../contracts/review-job-payload.js";
 import { isRetryableError } from "./failure-classification.js";
 import type { JobLogger } from "./job-logger.js";
 
-const NEXT_ATTEMPT_ON_RETRY = 2;
-
 export interface HandleReviewJobDependencies {
   reviewRunRepository: ReviewRunRepository;
   fixExecutor: FixExecutor;
@@ -16,6 +14,7 @@ export interface HandleReviewJobDependencies {
 export async function handleReviewJob(
   deps: HandleReviewJobDependencies,
   job: ReviewJobPayload,
+  retryCount?: number,
 ): Promise<void> {
   deps.logger.received();
 
@@ -64,7 +63,7 @@ export async function handleReviewJob(
       await deps.reviewRunRepository.updateStatus(run.id, "pending", {
         errorMessage: String(error),
       });
-      deps.logger.retrying(error, NEXT_ATTEMPT_ON_RETRY);
+      deps.logger.retrying(error, (retryCount ?? 0) + 2);
       throw error;
     }
 

@@ -44,6 +44,7 @@ declare module "pg" {
     public constructor(config?: PoolConfig);
     public connect(): Promise<PoolClient>;
     public end(): Promise<void>;
+    public on(event: "error", listener: (err: Error) => void): this;
     public query<R extends QueryResultRow = QueryResultRow>(
       queryTextOrConfig: string | QueryConfig,
       values?: readonly unknown[],

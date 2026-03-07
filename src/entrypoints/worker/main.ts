@@ -46,6 +46,9 @@ async function recoverStaleRuns(
 async function main(): Promise<void> {
   const config = loadWorkerConfig(process.env);
   const pool = new pg.Pool({ connectionString: config.databaseUrl });
+  pool.on("error", (error) => {
+    console.error("pg pool error:", error);
+  });
   const db = drizzle(pool);
   const boss = new PgBoss(config.databaseUrl);
 
@@ -63,31 +66,37 @@ async function main(): Promise<void> {
 
   await recoverStaleRuns(reviewRunRepository);
 
-  await boss.work(REVIEW_JOBS_QUEUE, async (jobs) => {
-    for (const job of jobs) {
-      const parseResult = reviewJobPayloadSchema.safeParse(job.data);
-      if (!parseResult.success) {
-        throw new Error(
-          `Invalid job payload for job ${job.id}: ${parseResult.error.message}`,
+  await boss.work(
+    REVIEW_JOBS_QUEUE,
+    { includeMetadata: true },
+    async (jobs) => {
+      for (const job of jobs) {
+        const parseResult = reviewJobPayloadSchema.safeParse(job.data);
+        if (!parseResult.success) {
+          throw new Error(
+            `Invalid job payload for job ${job.id}: ${parseResult.error.message}`,
+          );
+        }
+
+        const payload = parseResult.data;
+        const logger = createJobLogger({
+          attempt: job.retryCount + 1,
+          jobId: job.id,
+          runId: payload.runId,
+        });
+
+        await handleReviewJob(
+          {
+            reviewRunRepository,
+            fixExecutor,
+            logger,
+          },
+          payload,
+          job.retryCount,
         );
       }
-
-      const payload = parseResult.data;
-      const logger = createJobLogger({
-        jobId: job.id,
-        runId: payload.runId,
-      });
-
-      await handleReviewJob(
-        {
-          reviewRunRepository,
-          fixExecutor,
-          logger,
-        },
-        payload,
-      );
-    }
-  });
+    },
+  );
 
   await boss.work(REVIEW_JOBS_DLQ, async (jobs) => {
     for (const job of jobs) {
