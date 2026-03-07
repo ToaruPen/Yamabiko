@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ES2024",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "moduleDetection": "force",
+    "allowJs": false,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "useUnknownInCatchVariables": true,
+    "noFallthroughCasesInSwitch": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["node"],
+    "rootDir": ".",
+    "baseUrl": "."
+  },
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts",
+    "eslint.config.mjs",
+    "vitest.config.ts",
+    "drizzle.config.ts"
+  ],
+  "exclude": ["node_modules", "dist", "coverage"]
+}

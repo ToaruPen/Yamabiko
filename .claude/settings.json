@@ -1,0 +1,33 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(jq -r '.tool_input.file_path // empty') && [ -n \"$FILE\" ] && [ -f \"$FILE\" ] && case \"$FILE\" in *.ts|*.tsx|*.js|*.jsx|*.json) pnpm biome check --write \"$FILE\" 2>/dev/null || true ;; esac",
+            "statusMessage": "Biome format..."
+          },
+          {
+            "type": "command",
+            "command": "FILE=$(jq -r '.tool_input.file_path // empty') && [ -n \"$FILE\" ] && [ -f \"$FILE\" ] && case \"$FILE\" in *.ts|*.tsx) pnpm eslint --fix \"$FILE\" 2>/dev/null || true ;; esac",
+            "statusMessage": "ESLint fix..."
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CMD=$(jq -r '.tool_input.command // empty') && case \"$CMD\" in *'git commit'*) cd \"$CLAUDE_PROJECT_DIR\" && pnpm lint 2>&1 || { echo 'BLOCK: pnpm lint failed. Fix lint errors before committing.' >&2; exit 2; } ;; esac",
+            "statusMessage": "Pre-commit lint check..."
+          }
+        ]
+      }
+    ]
+  }
+}

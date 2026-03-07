@@ -2,6 +2,107 @@
 
 Event-driven automation for ingesting GitHub PR review bot feedback, applying fixes, and pushing updates safely.
 
+## Planned Stack
+
+- Runtime: `Node.js 22 LTS`
+- Language: `TypeScript 5`
+- Package manager: `pnpm`
+- HTTP/webhook server: `Fastify`
+- GitHub integration: `Octokit` + `@octokit/webhooks`
+- Database: `PostgreSQL`
+- Queue: `pg-boss`
+- ORM: `Drizzle ORM`
+- Testing: `Vitest`
+- Formatting: `Biome`
+- Type-aware linting: `ESLint 10` + `typescript-eslint`
+
+## Quality Bar
+
+This repository is planned with strict quality gates from the start.
+
+- `Biome` owns formatting, import organization, unused-code checks, and cognitive complexity
+- `ESLint` owns type-aware linting, plus `consistent-type-imports`
+- `tsc --noEmit` is required in CI
+- explicit `any` is forbidden
+- `@ts-ignore` and `@ts-expect-error` are forbidden
+- floating promises and misused promises fail lint
+- unsafe assignment/call/member access/return patterns fail lint
+- unused imports and unused variables fail checks
+- cognitive complexity is capped around `10`
+- strict compiler settings will include `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, and `useUnknownInCatchVariables`
+
+Planned ownership split:
+
+- `Biome`: format + `noUnusedImports` + `noUnusedVariables` + cognitive complexity
+- `ESLint`: `@typescript-eslint/no-explicit-any`, `ban-ts-comment`, `consistent-type-imports`, `no-floating-promises`, `no-misused-promises`, and `no-unsafe-*`
+- overlapping rules will be disabled rather than reported twice
+
+## Planned Repository Layout
+
+```text
+AGENTS.md
+package.json
+pnpm-lock.yaml
+biome.json
+eslint.config.mjs
+tsconfig.json
+vitest.config.ts
+drizzle.config.ts
+docker-compose.yml
+.sisyphus/
+scripts/
+drizzle/
+docker/
+  app.Dockerfile
+src/
+  entrypoints/
+    http/
+    cli/
+    worker/
+  config/
+  contracts/
+  domain/
+    review-events/
+    policy/
+    runs/
+  application/
+    services/
+    use-cases/
+  adapters/
+    github/
+    auth/
+    persistence/
+    queue/
+    worktree/
+    llm/
+  workers/
+  executors/
+    rule-based/
+    agent-based/
+  shared/
+test/
+  unit/
+  integration/
+  fixtures/
+```
+
+Structure intent:
+
+- `entrypoints/` handles delivery-specific concerns such as webhook and CLI input
+- `domain/` contains business rules and stays independent from GitHub API calls
+- `application/` coordinates use-cases
+- `adapters/` integrates GitHub, auth, persistence, queue, and workspace execution
+- `executors/` separates deterministic fixers from agent-backed fixers
+
+Test naming:
+
+- test files use `*.test.ts`
+
 ## Status
 
 Repository initialized. Implementation planning will follow in this repository.
+
+## Planning
+
+- Initial stack plan: `.sisyphus/plans/0001-initial-stack.md`
+- Implementation plan: `.sisyphus/plans/0002-implementation-plan.md`
