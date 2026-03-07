@@ -1,40 +1,11 @@
 import { afterEach, describe, expect, it, type Mock, vi } from "vitest";
-
-import type { FixExecutor } from "../../../src/adapters/llm/fix-executor.js";
 import { InMemoryReviewRunRepository } from "../../../src/adapters/persistence/in-memory-review-run-repository.js";
+import type { FixExecutor } from "../../../src/application/ports/fix-executor.js";
 import type { ReviewJobPayload } from "../../../src/contracts/review-job-payload.js";
-import type {
-  ReviewRun,
-  RunStatus,
-} from "../../../src/domain/runs/review-run.js";
+import type { RunStatus } from "../../../src/domain/runs/review-run.js";
 import { handleReviewJob } from "../../../src/workers/handle-review-job.js";
 import type { JobLogger } from "../../../src/workers/job-logger.js";
-
-function createReviewRun(
-  id: string,
-  overrides: Partial<ReviewRun> = {},
-): ReviewRun {
-  return {
-    actionability: "suggest",
-    createdAt: "2026-03-07T00:00:00.000Z",
-    event: {
-      actorLogin: "codex-bot",
-      body: "Please fix lint errors.",
-      headSha: "abc123",
-      kind: "pull_request_review_comment",
-      pullRequestNumber: 12,
-      receivedAt: "2026-03-07T00:00:00.000Z",
-      repository: {
-        name: "Call-n-Response",
-        owner: "ToaruPen",
-      },
-    },
-    id,
-    mode: "suggest-only",
-    status: "pending",
-    ...overrides,
-  };
-}
+import { createReviewRun } from "../../fixtures/review-run.js";
 
 function createReviewJob(
   overrides: Partial<ReviewJobPayload> = {},

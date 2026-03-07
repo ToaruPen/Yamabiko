@@ -1,5 +1,5 @@
+import type { ReviewJobQueue } from "../../application/ports/review-job-queue.js";
 import type { ReviewJobPayload } from "../../contracts/review-job-payload.js";
-import type { ReviewJobQueue } from "./review-job-queue.js";
 
 export class InMemoryReviewJobQueue implements ReviewJobQueue {
   private readonly jobs: ReviewJobPayload[] = [];

@@ -1,26 +1,14 @@
 import { PgBoss } from "pg-boss";
-import { z } from "zod";
-
-import type {
-  FixExecutionResult,
-  FixExecutor,
-} from "../../adapters/llm/fix-executor.js";
 import { InMemoryReviewRunRepository } from "../../adapters/persistence/in-memory-review-run-repository.js";
 import {
   PgBossReviewJobQueue,
   REVIEW_JOBS_QUEUE,
 } from "../../adapters/queue/pg-boss-review-job-queue.js";
 import { loadWorkerConfig } from "../../config/env.js";
+import { reviewJobPayloadSchema } from "../../contracts/review-job-payload.js";
+import { StubFixExecutor } from "../../executors/stub-fix-executor.js";
 import { handleReviewJob } from "../../workers/handle-review-job.js";
 import { createJobLogger } from "../../workers/job-logger.js";
-
-const reviewJobPayloadSchema = z.object({
-  headSha: z.string(),
-  pullRequestNumber: z.number().int(),
-  repositoryName: z.string(),
-  repositoryOwner: z.string(),
-  runId: z.string(),
-});
 
 async function main(): Promise<void> {
   const config = loadWorkerConfig(process.env);
@@ -37,7 +25,7 @@ async function main(): Promise<void> {
 
   // TODO: replace with Postgres-backed repository.
   const reviewRunRepository = new InMemoryReviewRunRepository();
-  const fixExecutor = createStubFixExecutor();
+  const fixExecutor = new StubFixExecutor();
 
   await boss.work(REVIEW_JOBS_QUEUE, async ([job]) => {
     if (job === undefined) {
@@ -99,17 +87,6 @@ async function main(): Promise<void> {
   process.on("SIGINT", () => {
     void shutdown("SIGINT");
   });
-}
-
-function createStubFixExecutor(): FixExecutor {
-  return {
-    execute(): Promise<FixExecutionResult> {
-      return Promise.resolve({
-        changedFiles: [],
-        summary: "stub executor - no real fix applied",
-      });
-    },
-  };
 }
 
 main().catch((error: unknown) => {

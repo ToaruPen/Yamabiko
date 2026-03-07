@@ -1,5 +1,5 @@
+import type { ReviewRunRepository } from "../../application/ports/review-run-repository.js";
 import type { ReviewRun, RunStatus } from "../../domain/runs/review-run.js";
-import type { ReviewRunRepository } from "./review-run-repository.js";
 
 export class InMemoryReviewRunRepository implements ReviewRunRepository {
   private readonly runs = new Map<string, ReviewRun>();

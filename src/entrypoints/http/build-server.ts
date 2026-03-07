@@ -1,8 +1,8 @@
 import Fastify, { type FastifyInstance } from "fastify";
 
-import type { DeliveryRepository } from "../../adapters/persistence/delivery-repository.js";
-import type { ReviewRunRepository } from "../../adapters/persistence/review-run-repository.js";
-import type { ReviewJobQueue } from "../../adapters/queue/review-job-queue.js";
+import type { DeliveryRepository } from "../../application/ports/delivery-repository.js";
+import type { ReviewJobQueue } from "../../application/ports/review-job-queue.js";
+import type { ReviewRunRepository } from "../../application/ports/review-run-repository.js";
 import { loadRuntimeConfig } from "../../config/env.js";
 import { webhookRoute } from "./webhook-route.js";
 
@@ -16,6 +16,9 @@ declare module "fastify" {
   interface FastifyInstance {
     config: ReturnType<typeof loadRuntimeConfig>;
     deps: ServerDependencies;
+  }
+  interface FastifyRequest {
+    rawBody?: string;
   }
 }
 
@@ -33,7 +36,7 @@ export function buildServer(
     { parseAs: "string" },
     (req, body, done) => {
       // Store raw body on request for HMAC verification
-      (req as unknown as { rawBody: string }).rawBody = body as string;
+      req.rawBody = body as string;
       try {
         done(null, JSON.parse(body as string));
       } catch (err) {

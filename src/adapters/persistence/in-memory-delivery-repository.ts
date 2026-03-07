@@ -1,5 +1,5 @@
+import type { DeliveryRepository } from "../../application/ports/delivery-repository.js";
 import type { WebhookDelivery } from "../../domain/deliveries/webhook-delivery.js";
-import type { DeliveryRepository } from "./delivery-repository.js";
 
 export class InMemoryDeliveryRepository implements DeliveryRepository {
   private readonly deliveries = new Map<string, WebhookDelivery>();

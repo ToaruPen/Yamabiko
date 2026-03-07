@@ -1,12 +1,9 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { InMemoryDeliveryRepository } from "../../../../src/adapters/persistence/in-memory-delivery-repository.js";
-import { InMemoryReviewRunRepository } from "../../../../src/adapters/persistence/in-memory-review-run-repository.js";
-import { InMemoryReviewJobQueue } from "../../../../src/adapters/queue/in-memory-review-job-queue.js";
-import { buildServer } from "../../../../src/entrypoints/http/build-server.js";
+import { createTestServer } from "../../../helpers/create-test-server.js";
 
 describe("buildServer", () => {
-  const servers = new Set<ReturnType<typeof buildServer>>();
+  const servers = new Set<ReturnType<typeof createTestServer>["server"]>();
 
   afterEach(async () => {
     await Promise.all(
@@ -18,21 +15,7 @@ describe("buildServer", () => {
   });
 
   it("exposes a health endpoint", async () => {
-    const server = buildServer(
-      {
-        DATABASE_URL:
-          "postgresql://postgres:postgres@localhost:5432/call_n_response",
-        HOST: "127.0.0.1",
-        PORT: "3000",
-        RUN_MODE: "dry-run",
-        WEBHOOK_SECRET: "test-secret",
-      },
-      {
-        deliveryRepository: new InMemoryDeliveryRepository(),
-        reviewJobQueue: new InMemoryReviewJobQueue(),
-        reviewRunRepository: new InMemoryReviewRunRepository(),
-      },
-    );
+    const { server } = createTestServer();
 
     servers.add(server);
 

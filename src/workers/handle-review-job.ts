@@ -1,10 +1,9 @@
-import type { FixExecutor } from "../adapters/llm/fix-executor.js";
-import type { ReviewRunRepository } from "../adapters/persistence/review-run-repository.js";
+import type { FixExecutor } from "../application/ports/fix-executor.js";
+import type { ReviewRunRepository } from "../application/ports/review-run-repository.js";
 import type { ReviewJobPayload } from "../contracts/review-job-payload.js";
 import type { RunStatus } from "../domain/runs/review-run.js";
 import { isRetryableError } from "./failure-classification.js";
 import type { JobLogger } from "./job-logger.js";
-import { processReviewFeedback } from "./process-review-feedback.js";
 
 const TERMINAL_STATUSES: ReadonlySet<RunStatus> = new Set([
   "completed",
@@ -48,7 +47,7 @@ export async function handleReviewJob(
   const startedAtMs = Date.now();
 
   try {
-    await processReviewFeedback(run, deps.fixExecutor);
+    await deps.fixExecutor.execute({ run });
     await deps.reviewRunRepository.updateStatus(run.id, "completed", {
       completedAt: now().toISOString(),
     });

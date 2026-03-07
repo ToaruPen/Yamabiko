@@ -5,8 +5,15 @@ export const RUN_MODES = ["dry-run", "suggest-only", "push-enabled"] as const;
 
 export type RunMode = (typeof RUN_MODES)[number];
 
-// biome-ignore format: keep exact union declaration
-export type RunStatus = "pending" | "processing" | "completed" | "failed" | "skipped";
+export const RUN_STATUSES = [
+  "pending",
+  "processing",
+  "completed",
+  "failed",
+  "skipped",
+] as const;
+
+export type RunStatus = (typeof RUN_STATUSES)[number];
 
 export interface ReviewRun {
   actionability: ReviewActionability;

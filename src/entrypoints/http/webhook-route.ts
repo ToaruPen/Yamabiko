@@ -10,10 +10,6 @@ interface HeaderValidationError {
   statusCode: 400 | 401;
 }
 
-interface RequestWithRawBody {
-  rawBody: string;
-}
-
 interface WebhookHeaders {
   deliveryId: string;
   eventType: string;
@@ -34,7 +30,7 @@ export async function webhookRoute(server: FastifyInstance): Promise<void> {
       });
     }
 
-    const rawBody = (request as unknown as RequestWithRawBody).rawBody;
+    const rawBody = request.rawBody ?? "";
     const isValidSignature = await verifyWebhookSignature(
       server.config.webhookSecret,
       rawBody,
@@ -87,7 +83,6 @@ export async function webhookRoute(server: FastifyInstance): Promise<void> {
       status: "accepted",
     });
   });
-
   await Promise.resolve();
 }
 

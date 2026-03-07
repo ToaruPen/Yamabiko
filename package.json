@@ -20,7 +20,8 @@
     "lint": "pnpm lint:biome && pnpm lint:eslint && pnpm typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "pnpm lint && pnpm test"
+    "check": "pnpm lint && pnpm test",
+    "simplify": "bash scripts/simplify.sh"
   },
   "dependencies": {
     "@octokit/webhooks": "^14.2.0",

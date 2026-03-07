@@ -1,6 +1,6 @@
 import type { PgBoss } from "pg-boss";
+import type { ReviewJobQueue } from "../../application/ports/review-job-queue.js";
 import type { ReviewJobPayload } from "../../contracts/review-job-payload.js";
-import type { ReviewJobQueue } from "./review-job-queue.js";
 
 export const REVIEW_JOBS_QUEUE = "review-jobs";
 export const REVIEW_JOBS_DLQ = "review-jobs-dlq";

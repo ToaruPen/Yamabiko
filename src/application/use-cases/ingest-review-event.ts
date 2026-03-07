@@ -1,6 +1,3 @@
-import type { DeliveryRepository } from "../../adapters/persistence/delivery-repository.js";
-import type { ReviewRunRepository } from "../../adapters/persistence/review-run-repository.js";
-import type { ReviewJobQueue } from "../../adapters/queue/review-job-queue.js";
 import type { ReviewJobPayload } from "../../contracts/review-job-payload.js";
 import type { WebhookDelivery } from "../../domain/deliveries/webhook-delivery.js";
 import {
@@ -11,6 +8,9 @@ import {
 import type { ReviewFeedbackEvent } from "../../domain/review-events/review-feedback-event.js";
 import type { ReviewRun, RunMode } from "../../domain/runs/review-run.js";
 import { createRunId } from "../../shared/ids.js";
+import type { DeliveryRepository } from "../ports/delivery-repository.js";
+import type { ReviewJobQueue } from "../ports/review-job-queue.js";
+import type { ReviewRunRepository } from "../ports/review-run-repository.js";
 
 export interface IngestReviewEventDependencies {
   deliveryRepository: DeliveryRepository;

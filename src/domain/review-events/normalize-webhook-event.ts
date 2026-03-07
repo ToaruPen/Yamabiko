@@ -16,6 +16,13 @@ const senderSchema = z.object({
   login: z.string(),
 });
 
+const pullRequestSchema = z.object({
+  head: z.object({
+    sha: z.string(),
+  }),
+  number: z.number(),
+});
+
 const issueCommentSchema = z.object({
   comment: z.object({
     body: z.string(),
@@ -32,12 +39,7 @@ const issueCommentSchema = z.object({
 });
 
 const pullRequestReviewSchema = z.object({
-  pull_request: z.object({
-    head: z.object({
-      sha: z.string(),
-    }),
-    number: z.number(),
-  }),
+  pull_request: pullRequestSchema,
   repository: repositorySchema,
   review: z.object({
     body: z.string(),
@@ -52,15 +54,25 @@ const pullRequestReviewCommentSchema = z.object({
       login: z.string(),
     }),
   }),
-  pull_request: z.object({
-    head: z.object({
-      sha: z.string(),
-    }),
-    number: z.number(),
-  }),
+  pull_request: pullRequestSchema,
   repository: repositorySchema,
   sender: senderSchema,
 });
+
+function parseAndMap<T>(
+  schema: z.ZodType<T>,
+  payload: unknown,
+  mapper: (parsed: T, receivedAt: string) => ReviewFeedbackEvent,
+  receivedAt: string,
+): ReviewFeedbackEvent | null {
+  const result = schema.safeParse(payload);
+
+  if (!result.success) {
+    return null;
+  }
+
+  return mapper(result.data, receivedAt);
+}
 
 export function normalizeWebhookEvent(
   eventType: string,
@@ -92,63 +104,60 @@ function normalizeIssueComment(
   payload: unknown,
   receivedAt: string,
 ): ReviewFeedbackEvent | null {
-  const parsed = issueCommentSchema.safeParse(payload);
-
-  if (!parsed.success) {
-    return null;
-  }
-
-  return {
-    actorLogin: parsed.data.sender.login,
-    body: parsed.data.comment.body,
-    headSha: null,
-    kind: "issue_comment",
-    pullRequestNumber: parsed.data.issue.number,
+  return parseAndMap(
+    issueCommentSchema,
+    payload,
+    (parsed, normalizedAt) => ({
+      actorLogin: parsed.sender.login,
+      body: parsed.comment.body,
+      headSha: null,
+      kind: "issue_comment",
+      pullRequestNumber: parsed.issue.number,
+      receivedAt: normalizedAt,
+      repository: toRepositoryRef(parsed.repository),
+    }),
     receivedAt,
-    repository: toRepositoryRef(parsed.data.repository),
-  };
+  );
 }
 
 function normalizePullRequestReview(
   payload: unknown,
   receivedAt: string,
 ): ReviewFeedbackEvent | null {
-  const parsed = pullRequestReviewSchema.safeParse(payload);
-
-  if (!parsed.success) {
-    return null;
-  }
-
-  return {
-    actorLogin: parsed.data.sender.login,
-    body: parsed.data.review.body,
-    headSha: parsed.data.pull_request.head.sha,
-    kind: "pull_request_review",
-    pullRequestNumber: parsed.data.pull_request.number,
+  return parseAndMap(
+    pullRequestReviewSchema,
+    payload,
+    (parsed, normalizedAt) => ({
+      actorLogin: parsed.sender.login,
+      body: parsed.review.body,
+      headSha: parsed.pull_request.head.sha,
+      kind: "pull_request_review",
+      pullRequestNumber: parsed.pull_request.number,
+      receivedAt: normalizedAt,
+      repository: toRepositoryRef(parsed.repository),
+    }),
     receivedAt,
-    repository: toRepositoryRef(parsed.data.repository),
-  };
+  );
 }
 
 function normalizePullRequestReviewComment(
   payload: unknown,
   receivedAt: string,
 ): ReviewFeedbackEvent | null {
-  const parsed = pullRequestReviewCommentSchema.safeParse(payload);
-
-  if (!parsed.success) {
-    return null;
-  }
-
-  return {
-    actorLogin: parsed.data.sender.login,
-    body: parsed.data.comment.body,
-    headSha: parsed.data.pull_request.head.sha,
-    kind: "pull_request_review_comment",
-    pullRequestNumber: parsed.data.pull_request.number,
+  return parseAndMap(
+    pullRequestReviewCommentSchema,
+    payload,
+    (parsed, normalizedAt) => ({
+      actorLogin: parsed.sender.login,
+      body: parsed.comment.body,
+      headSha: parsed.pull_request.head.sha,
+      kind: "pull_request_review_comment",
+      pullRequestNumber: parsed.pull_request.number,
+      receivedAt: normalizedAt,
+      repository: toRepositoryRef(parsed.repository),
+    }),
     receivedAt,
-    repository: toRepositoryRef(parsed.data.repository),
-  };
+  );
 }
 
 function toRepositoryRef(

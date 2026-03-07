@@ -1,14 +1,6 @@
-import type {
-  FixExecutionRequest,
-  FixExecutionResult,
-  FixExecutor,
-} from "../../adapters/llm/fix-executor.js";
+import type { FixExecutor } from "../../application/ports/fix-executor.js";
+import { StubFixExecutor } from "../stub-fix-executor.js";
 
-export class AgentBasedFixExecutor implements FixExecutor {
-  public execute(request: FixExecutionRequest): Promise<FixExecutionResult> {
-    return Promise.resolve({
-      changedFiles: [],
-      summary: `Agent-based executor is ready to evaluate run ${request.run.id}.`,
-    });
-  }
-}
+export class AgentBasedFixExecutor
+  extends StubFixExecutor
+  implements FixExecutor {}
