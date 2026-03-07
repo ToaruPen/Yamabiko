@@ -9,8 +9,6 @@ CREATE TABLE "idempotency_keys" (
 --> statement-breakpoint
 CREATE TABLE "review_runs" (
 	"actionability" "review_actionability" NOT NULL,
-	"actor_login" text NOT NULL,
-	"body" text NOT NULL,
 	"completed_at" timestamp with time zone,
 	"created_at" timestamp with time zone NOT NULL,
 	"error_message" text,
@@ -19,7 +17,6 @@ CREATE TABLE "review_runs" (
 	"kind" text NOT NULL,
 	"mode" "run_mode" NOT NULL,
 	"pull_request_number" integer NOT NULL,
-	"received_at" timestamp with time zone NOT NULL,
 	"repository_name" text NOT NULL,
 	"repository_owner" text NOT NULL,
 	"started_at" timestamp with time zone,

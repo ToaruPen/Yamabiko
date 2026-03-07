@@ -13,7 +13,6 @@ declare module "pg" {
 
   export interface QueryConfig {
     name?: string;
-    rowMode?: "array";
     text: string;
     values?: readonly unknown[];
   }
@@ -29,6 +28,7 @@ declare module "pg" {
 
   export class Client {
     public constructor(config?: string | ClientConfig);
+    public connect(): Promise<void>;
     public end(): Promise<void>;
     public query<R extends QueryResultRow = QueryResultRow>(
       queryTextOrConfig: string | QueryConfig,

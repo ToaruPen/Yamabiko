@@ -7,12 +7,39 @@ import {
   REVIEW_JOBS_DLQ,
   REVIEW_JOBS_QUEUE,
 } from "../../adapters/queue/pg-boss-review-job-queue.js";
+import type { ReviewRunRepository } from "../../application/ports/review-run-repository.js";
 import { loadWorkerConfig } from "../../config/env.js";
 import { reviewJobPayloadSchema } from "../../contracts/review-job-payload.js";
 import { StubFixExecutor } from "../../executors/stub-fix-executor.js";
 import { handleDeadLetter } from "../../workers/handle-dead-letter.js";
 import { handleReviewJob } from "../../workers/handle-review-job.js";
 import { createJobLogger } from "../../workers/job-logger.js";
+
+const STALE_PROCESSING_THRESHOLD_MS = 5 * 60 * 1000;
+
+async function recoverStaleRuns(
+  repository: ReviewRunRepository,
+): Promise<void> {
+  const processingRuns = await repository.findByStatus("processing");
+  const now = Date.now();
+
+  for (const run of processingRuns) {
+    if (run.startedAt === undefined) {
+      continue;
+    }
+
+    const elapsed = now - new Date(run.startedAt).getTime();
+    if (elapsed > STALE_PROCESSING_THRESHOLD_MS) {
+      await repository.updateStatus(run.id, "pending", {
+        startedAt: null,
+        errorMessage: null,
+      });
+      console.log(
+        `Recovered stale processing run ${run.id} (stuck for ${String(Math.round(elapsed / 1000))}s)`,
+      );
+    }
+  }
+}
 
 async function main(): Promise<void> {
   const config = loadWorkerConfig(process.env);
@@ -32,53 +59,51 @@ async function main(): Promise<void> {
   const reviewRunRepository = new DrizzleReviewRunRepository(db);
   const fixExecutor = new StubFixExecutor();
 
-  await boss.work(REVIEW_JOBS_QUEUE, async ([job]) => {
-    if (job === undefined) {
-      return;
-    }
+  await recoverStaleRuns(reviewRunRepository);
 
-    const parseResult = reviewJobPayloadSchema.safeParse(job.data);
-    if (!parseResult.success) {
-      throw new Error(
-        `Invalid job payload for job ${job.id}: ${parseResult.error.message}`,
+  await boss.work(REVIEW_JOBS_QUEUE, async (jobs) => {
+    for (const job of jobs) {
+      const parseResult = reviewJobPayloadSchema.safeParse(job.data);
+      if (!parseResult.success) {
+        throw new Error(
+          `Invalid job payload for job ${job.id}: ${parseResult.error.message}`,
+        );
+      }
+
+      const payload = parseResult.data;
+      const logger = createJobLogger({
+        jobId: job.id,
+        runId: payload.runId,
+      });
+
+      await handleReviewJob(
+        {
+          reviewRunRepository,
+          fixExecutor,
+          logger,
+        },
+        payload,
       );
     }
-
-    const payload = parseResult.data;
-    const logger = createJobLogger({
-      jobId: job.id,
-      runId: payload.runId,
-    });
-
-    await handleReviewJob(
-      {
-        reviewRunRepository,
-        fixExecutor,
-        logger,
-      },
-      payload,
-    );
   });
 
-  await boss.work(REVIEW_JOBS_DLQ, async ([job]) => {
-    if (job === undefined) {
-      return;
+  await boss.work(REVIEW_JOBS_DLQ, async (jobs) => {
+    for (const job of jobs) {
+      const parseResult = reviewJobPayloadSchema.safeParse(job.data);
+      if (!parseResult.success) {
+        throw new Error(
+          `Invalid DLQ job payload for job ${job.id}: ${parseResult.error.message}`,
+        );
+      }
+
+      const payload = parseResult.data;
+      const logger = createJobLogger({
+        jobId: job.id,
+        runId: payload.runId,
+      });
+
+      await handleDeadLetter({ reviewRunRepository, logger }, payload);
     }
-
-    const parseResult = reviewJobPayloadSchema.safeParse(job.data);
-    if (!parseResult.success) {
-      throw new Error(
-        `Invalid DLQ job payload for job ${job.id}: ${parseResult.error.message}`,
-      );
-    }
-
-    const payload = parseResult.data;
-    const logger = createJobLogger({
-      jobId: job.id,
-      runId: payload.runId,
-    });
-
-    await handleDeadLetter({ reviewRunRepository, logger }, payload);
   });
 
   console.log(
