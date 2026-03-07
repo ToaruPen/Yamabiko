@@ -50,7 +50,7 @@ export function buildServer(
 
   server.get("/health", () => ({
     runMode: config.runMode,
-    service: "call-n-response",
+    service: "yamabiko",
     status: "ok",
   }));
 

@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## WHY
-- Call-n-Response is a GitHub App-first backend for ingesting PR review bot feedback and turning it into safe suggestions or fixes.
+- Yamabiko is a GitHub App-first backend for ingesting PR review bot feedback and turning it into safe suggestions or fixes.
 - The canonical stack, architecture, and safety decisions live in `README.md` and `.sisyphus/plans/0001-initial-stack.md`.
 
 ## WHAT

@@ -108,7 +108,7 @@ describe("webhook intake integration", () => {
     expect(job).toMatchObject({
       headSha: "abc123def456",
       pullRequestNumber: 42,
-      repositoryName: "call-n-response",
+      repositoryName: "yamabiko",
       repositoryOwner: "ToaruPen",
       runId: responseBody.runId,
     });

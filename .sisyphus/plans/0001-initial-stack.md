@@ -2,7 +2,7 @@
 
 ## Goal
 
-Call-n-Response is an OSS for ingesting GitHub PR review bot feedback, deciding whether it is actionable, applying safe fixes, and pushing updates back to the PR branch.
+Yamabiko is an OSS for ingesting GitHub PR review bot feedback, deciding whether it is actionable, applying safe fixes, and pushing updates back to the PR branch.
 
 The first implementation should optimize for:
 
@@ -344,4 +344,4 @@ Test file naming should use `*.test.ts` so Vitest discovery stays explicit and p
 
 ## Decision summary
 
-Call-n-Response v1 will be a GitHub App-first, webhook-driven TypeScript service built on Node 22, Fastify, Octokit, PostgreSQL, pg-boss, Drizzle, and Vitest. It will favor a portable self-hosted backend over an Action-only or platform-specific design, while keeping room for a future GitHub Action adapter.
+Yamabiko v1 will be a GitHub App-first, webhook-driven TypeScript service built on Node 22, Fastify, Octokit, PostgreSQL, pg-boss, Drizzle, and Vitest. It will favor a portable self-hosted backend over an Action-only or platform-specific design, while keeping room for a future GitHub Action adapter.

@@ -28,7 +28,7 @@ describe("ingestReviewEvent", () => {
           pullRequestNumber: 12,
           receivedAt: "2026-03-07T00:00:00.000Z",
           repository: {
-            name: "Call-n-Response",
+            name: "Yamabiko",
             owner: "ToaruPen",
           },
         },
@@ -89,7 +89,7 @@ describe("ingestReviewEvent", () => {
           pullRequestNumber: 12,
           receivedAt: "2026-03-07T00:00:00.000Z",
           repository: {
-            name: "Call-n-Response",
+            name: "Yamabiko",
             owner: "ToaruPen",
           },
         },
@@ -139,7 +139,7 @@ describe("ingestReviewEvent", () => {
           pullRequestNumber: 12,
           receivedAt: "2026-03-07T00:00:00.000Z",
           repository: {
-            name: "Call-n-Response",
+            name: "Yamabiko",
             owner: "ToaruPen",
           },
         },
@@ -199,7 +199,7 @@ describe("ingestReviewEvent", () => {
           pullRequestNumber: 12,
           receivedAt: "2026-03-07T00:00:00.000Z",
           repository: {
-            name: "Call-n-Response",
+            name: "Yamabiko",
             owner: "ToaruPen",
           },
         },

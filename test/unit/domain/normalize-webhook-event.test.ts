@@ -30,7 +30,7 @@ describe("normalizeWebhookEvent", () => {
       pullRequestNumber: 42,
       receivedAt: "2026-03-07T10:00:00.000Z",
       repository: {
-        name: "call-n-response",
+        name: "yamabiko",
         owner: "ToaruPen",
       },
     });
@@ -54,7 +54,7 @@ describe("normalizeWebhookEvent", () => {
       pullRequestNumber: 42,
       receivedAt: "2026-03-07T10:00:00.000Z",
       repository: {
-        name: "call-n-response",
+        name: "yamabiko",
         owner: "ToaruPen",
       },
     });
@@ -78,7 +78,7 @@ describe("normalizeWebhookEvent", () => {
       pullRequestNumber: 42,
       receivedAt: "2026-03-07T10:00:00.000Z",
       repository: {
-        name: "call-n-response",
+        name: "yamabiko",
         owner: "ToaruPen",
       },
     });

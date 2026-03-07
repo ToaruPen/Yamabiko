@@ -7,7 +7,7 @@ import { signPayload } from "./sign-payload.js";
 export const TEST_WEBHOOK_SECRET = "test-webhook-secret";
 
 export const TEST_ENV = {
-  DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/call_n_response",
+  DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/yamabiko",
   HOST: "127.0.0.1",
   PORT: "3000",
   RUN_MODE: "dry-run",

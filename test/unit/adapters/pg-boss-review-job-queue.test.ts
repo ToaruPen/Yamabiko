@@ -10,7 +10,7 @@ import type { ReviewJobPayload } from "../../../src/contracts/review-job-payload
 const sampleJob: ReviewJobPayload = {
   headSha: "abc123",
   pullRequestNumber: 42,
-  repositoryName: "call-n-response",
+  repositoryName: "yamabiko",
   repositoryOwner: "acme",
   runId: "run-1",
 };

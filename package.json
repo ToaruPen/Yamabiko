@@ -1,5 +1,5 @@
 {
-  "name": "call-n-response",
+  "name": "yamabiko",
   "version": "0.1.0",
   "private": true,
   "description": "Event-driven automation for responding to GitHub PR review feedback.",

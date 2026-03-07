@@ -1,1 +1,1 @@
-process.stdout.write("Call-n-Response CLI scaffold ready.\n");
+process.stdout.write("Yamabiko CLI scaffold ready.\n");

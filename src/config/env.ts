@@ -6,7 +6,7 @@ const baseConfigSchema = z.object({
   DATABASE_URL: z
     .string()
     .min(1)
-    .default("postgresql://postgres:postgres@localhost:5432/call_n_response"),
+    .default("postgresql://postgres:postgres@localhost:5432/yamabiko"),
   RUN_MODE: z.enum(RUN_MODES).default("dry-run"),
 });
 

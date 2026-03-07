@@ -27,7 +27,7 @@ describe("buildServer", () => {
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual({
       runMode: "dry-run",
-      service: "call-n-response",
+      service: "yamabiko",
       status: "ok",
     });
   });

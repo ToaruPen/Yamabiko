@@ -13,7 +13,7 @@ function createReviewJob(
   return {
     headSha: "abc123",
     pullRequestNumber: 12,
-    repositoryName: "Call-n-Response",
+    repositoryName: "Yamabiko",
     repositoryOwner: "ToaruPen",
     runId: "run-1",
     ...overrides,

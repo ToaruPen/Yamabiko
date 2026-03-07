@@ -8,7 +8,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/call_n_response
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/yamabiko
       HOST: 0.0.0.0
       PORT: "3000"
       RUN_MODE: dry-run
@@ -24,17 +24,17 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/call_n_response
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/yamabiko
       RUN_MODE: dry-run
 
   postgres:
     image: postgres:17-alpine
     environment:
-      POSTGRES_DB: call_n_response
+      POSTGRES_DB: yamabiko
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d call_n_response"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d yamabiko"]
       interval: 5s
       timeout: 5s
       retries: 10
