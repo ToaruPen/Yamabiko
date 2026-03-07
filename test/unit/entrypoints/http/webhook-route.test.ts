@@ -1,4 +1,3 @@
-import { createHmac } from "node:crypto";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { InMemoryDeliveryRepository } from "../../../../src/adapters/persistence/in-memory-delivery-repository.js";
@@ -9,12 +8,9 @@ import {
   issueCommentPayload,
   pullRequestReviewCommentPayload,
 } from "../../../fixtures/webhooks/index.js";
+import { signPayload } from "../../../helpers/sign-payload.js";
 
 const webhookSecret = "test-webhook-secret";
-
-function signPayload(secret: string, payload: string): string {
-  return `sha256=${createHmac("sha256", secret).update(payload).digest("hex")}`;
-}
 
 describe("webhook route", () => {
   const servers = new Set<ReturnType<typeof buildServer>>();
@@ -94,7 +90,7 @@ describe("webhook route", () => {
     });
   });
 
-  it("returns 401 when signature header is missing", async () => {
+  it("returns 400 when signature header is missing", async () => {
     const server = createServer();
     const payload = JSON.stringify(pullRequestReviewCommentPayload);
 
@@ -109,9 +105,9 @@ describe("webhook route", () => {
       url: "/webhook",
     });
 
-    expect(response.statusCode).toBe(401);
+    expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
-      message: "Missing signature",
+      message: "Missing X-Hub-Signature-256 header",
       status: "error",
     });
   });
@@ -139,7 +135,7 @@ describe("webhook route", () => {
     });
   });
 
-  it("returns 200 ignored when webhook event is unsupported", async () => {
+  it("returns 204 when webhook event is unsupported", async () => {
     const server = createServer();
     const payload = JSON.stringify(issueCommentPayload);
 
@@ -155,10 +151,7 @@ describe("webhook route", () => {
       url: "/webhook",
     });
 
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({
-      status: "ignored",
-    });
+    expect(response.statusCode).toBe(204);
   });
 
   it("returns 200 accepted for a valid webhook", async () => {

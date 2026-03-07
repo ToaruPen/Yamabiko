@@ -5,11 +5,11 @@ export class InMemoryReviewJobQueue implements ReviewJobQueue {
   private readonly jobs: ReviewJobPayload[] = [];
 
   public enqueue(job: ReviewJobPayload): Promise<void> {
-    this.jobs.push(job);
+    this.jobs.push({ ...job });
     return Promise.resolve();
   }
 
   public snapshot(): readonly ReviewJobPayload[] {
-    return this.jobs;
+    return this.jobs.map((j) => ({ ...j }));
   }
 }

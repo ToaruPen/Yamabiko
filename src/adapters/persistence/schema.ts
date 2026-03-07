@@ -1,23 +1,29 @@
-import { boolean, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  integer,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 
+import { ACTIONABILITIES } from "../../domain/policy/actionability.js";
 import { RUN_MODES } from "../../domain/runs/review-run.js";
-
-const REVIEW_ACTIONABILITIES = ["ignore", "suggest", "apply"] as const;
 
 export const reviewActionabilityEnum = pgEnum(
   "review_actionability",
-  REVIEW_ACTIONABILITIES,
+  ACTIONABILITIES,
 );
 export const runModeEnum = pgEnum("run_mode", RUN_MODES);
 
 export const reviewRunsTable = pgTable("review_runs", {
   actionability: reviewActionabilityEnum("actionability").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
-  headSha: text("head_sha").notNull(),
+  headSha: text("head_sha"),
   id: text("id").primaryKey(),
   kind: text("kind").notNull(),
   mode: runModeEnum("mode").notNull(),
-  pullRequestNumber: text("pull_request_number").notNull(),
+  pullRequestNumber: integer("pull_request_number").notNull(),
   repositoryName: text("repository_name").notNull(),
   repositoryOwner: text("repository_owner").notNull(),
 });

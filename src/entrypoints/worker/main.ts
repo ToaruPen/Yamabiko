@@ -1,6 +1,4 @@
-import { loadRuntimeConfig } from "../../config/env.js";
-
-const config = loadRuntimeConfig(process.env);
+const runMode = process.env.RUN_MODE ?? "dry-run";
 
 let heartbeat: NodeJS.Timeout | undefined;
 
@@ -14,7 +12,7 @@ function stopWorker(exitCode: number): void {
 }
 
 process.stdout.write(
-  `Call-n-Response worker scaffold started in ${config.runMode} mode.\n`,
+  `Call-n-Response worker scaffold started in ${runMode} mode.\n`,
 );
 
 heartbeat = setInterval(() => {

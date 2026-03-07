@@ -38,4 +38,22 @@ describe("ReviewFeedbackEvent", () => {
     expect(event.headSha).toBe("abc123def456");
     expect(event.kind).toBe("pull_request_review");
   });
+
+  it("accepts event with headSha: string (pull_request_review_comment has head SHA)", () => {
+    const event: ReviewFeedbackEvent = {
+      actorLogin: "lint-bot",
+      body: "This function has too much cognitive complexity.",
+      headSha: "abc123def456",
+      kind: "pull_request_review_comment",
+      pullRequestNumber: 42,
+      receivedAt: "2026-03-07T00:00:00.000Z",
+      repository: {
+        name: "Call-n-Response",
+        owner: "ToaruPen",
+      },
+    };
+
+    expect(event.headSha).toBe("abc123def456");
+    expect(event.kind).toBe("pull_request_review_comment");
+  });
 });

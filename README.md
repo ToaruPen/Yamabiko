@@ -100,7 +100,16 @@ Test naming:
 
 ## Status
 
-Repository initialized. Implementation planning will follow in this repository.
+Phase 1+2 (webhook intake and event normalization) is implemented:
+
+- POST /webhook endpoint with HMAC signature verification
+- Event normalization for `pull_request_review`, `pull_request_review_comment`, and `issue_comment`
+- Durable delivery persistence with idempotent deduplication (X-GitHub-Delivery)
+- Review run creation with actionability classification
+- Job queue handoff for actionable events
+- 48+ unit and integration tests
+
+Phase 3 (queue integration and worker orchestration) is in progress.
 
 ## Planning
 
