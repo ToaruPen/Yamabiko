@@ -111,6 +111,33 @@ Phase 1+2 (webhook intake and event normalization) is implemented:
 
 Phase 3 (queue integration and worker orchestration) is in progress.
 
+## Getting Started
+
+### Prerequisites
+
+- Node.js 22+
+- pnpm
+
+### Install and verify
+
+```bash
+pnpm install
+pnpm test       # 48+ unit and integration tests
+pnpm lint       # Biome formatting + ESLint type-aware checks
+```
+
+### Local development
+
+Requires environment variables:
+
+```bash
+export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/call_n_response"
+export WEBHOOK_SECRET="your-webhook-secret"
+pnpm dev
+```
+
+The test suite covers webhook HMAC signature verification, idempotent deduplication via `X-GitHub-Delivery`, and event normalization for all supported GitHub event types.
+
 ## Planning
 
 - Initial stack plan: `.sisyphus/plans/0001-initial-stack.md`

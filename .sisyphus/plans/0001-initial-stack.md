@@ -227,8 +227,8 @@ Result categories:
 - GitHub App webhook intake
 - support for `issue_comment`, `pull_request_review`, and `pull_request_review_comment`
 - policy checks for actor allowlists, deduplication, and branch safety
-- worker-based execution in ephemeral workspaces
-- safe push-back to PR branches
+- worker-based execution in ephemeral workspaces (Phase 3+)
+- safe push-back to PR branches (Phase 4+)
 - self-hosted deployment through Docker Compose
 
 ### Explicitly deferred
