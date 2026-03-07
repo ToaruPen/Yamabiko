@@ -1,6 +1,8 @@
+import type { DeliveryRepository } from "../../adapters/persistence/delivery-repository.js";
 import type { ReviewRunRepository } from "../../adapters/persistence/review-run-repository.js";
 import type { ReviewJobQueue } from "../../adapters/queue/review-job-queue.js";
 import type { ReviewJobPayload } from "../../contracts/review-job-payload.js";
+import type { WebhookDelivery } from "../../domain/deliveries/webhook-delivery.js";
 import {
   type ActionabilitySignal,
   classifyActionability,
@@ -11,12 +13,14 @@ import type { ReviewRun, RunMode } from "../../domain/runs/review-run.js";
 import { createRunId } from "../../shared/ids.js";
 
 export interface IngestReviewEventDependencies {
+  deliveryRepository: DeliveryRepository;
   now?: () => Date;
   reviewJobQueue: ReviewJobQueue;
   reviewRunRepository: ReviewRunRepository;
 }
 
 export interface IngestReviewEventInput {
+  deliveryId: string;
   event: ReviewFeedbackEvent;
   mode: RunMode;
   signal: ActionabilitySignal;
@@ -24,14 +28,38 @@ export interface IngestReviewEventInput {
 
 export interface IngestReviewEventResult {
   actionability: ReviewActionability;
+  duplicate: boolean;
   enqueued: boolean;
-  runId: string;
+  runId: string | null;
 }
 
 export async function ingestReviewEvent(
   dependencies: IngestReviewEventDependencies,
   input: IngestReviewEventInput,
 ): Promise<IngestReviewEventResult> {
+  const duplicate = await dependencies.deliveryRepository.existsById(
+    input.deliveryId,
+  );
+
+  if (duplicate) {
+    return {
+      actionability: "ignore",
+      duplicate: true,
+      enqueued: false,
+      runId: null,
+    };
+  }
+
+  const delivery: WebhookDelivery = {
+    action: toDeliveryAction(input.event),
+    eventType: input.event.kind,
+    id: input.deliveryId,
+    processed: false,
+    receivedAt: input.event.receivedAt,
+  };
+
+  await dependencies.deliveryRepository.save(delivery);
+
   const createdAt = (dependencies.now ?? (() => new Date()))().toISOString();
   const actionability = classifyActionability(input.signal);
   const runId = createRunId();
@@ -48,6 +76,7 @@ export async function ingestReviewEvent(
   if (actionability === "ignore") {
     return {
       actionability,
+      duplicate: false,
       enqueued: false,
       runId,
     };
@@ -56,6 +85,7 @@ export async function ingestReviewEvent(
   if (input.event.headSha === null) {
     return {
       actionability,
+      duplicate: false,
       enqueued: false,
       runId,
     };
@@ -73,7 +103,16 @@ export async function ingestReviewEvent(
 
   return {
     actionability,
+    duplicate: false,
     enqueued: true,
     runId,
   };
+}
+
+function toDeliveryAction(event: ReviewFeedbackEvent): string {
+  if (event.kind === "pull_request_review") {
+    return "submitted";
+  }
+
+  return "created";
 }
