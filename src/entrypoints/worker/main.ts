@@ -2,11 +2,13 @@ import { PgBoss } from "pg-boss";
 import { InMemoryReviewRunRepository } from "../../adapters/persistence/in-memory-review-run-repository.js";
 import {
   PgBossReviewJobQueue,
+  REVIEW_JOBS_DLQ,
   REVIEW_JOBS_QUEUE,
 } from "../../adapters/queue/pg-boss-review-job-queue.js";
 import { loadWorkerConfig } from "../../config/env.js";
 import { reviewJobPayloadSchema } from "../../contracts/review-job-payload.js";
 import { StubFixExecutor } from "../../executors/stub-fix-executor.js";
+import { handleDeadLetter } from "../../workers/handle-dead-letter.js";
 import { handleReviewJob } from "../../workers/handle-review-job.js";
 import { createJobLogger } from "../../workers/job-logger.js";
 
@@ -55,6 +57,25 @@ async function main(): Promise<void> {
       },
       payload,
     );
+  });
+
+  await boss.work(REVIEW_JOBS_DLQ, async ([job]) => {
+    if (job === undefined) {
+      return;
+    }
+
+    const parseResult = reviewJobPayloadSchema.safeParse(job.data);
+    if (!parseResult.success) {
+      return;
+    }
+
+    const payload = parseResult.data;
+    const logger = createJobLogger({
+      jobId: job.id,
+      runId: payload.runId,
+    });
+
+    await handleDeadLetter({ reviewRunRepository, logger }, payload);
   });
 
   console.log(
