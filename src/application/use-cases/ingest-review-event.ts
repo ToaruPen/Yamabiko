@@ -68,18 +68,20 @@ export async function ingestReviewEvent(
   const createdAt = (dependencies.now ?? (() => new Date()))().toISOString();
   const actionability = classifyActionability(input.signal);
   const runId = createRunId();
+  const shouldEnqueue =
+    actionability !== "ignore" && input.event.headSha !== null;
   const run: ReviewRun = {
     actionability,
     createdAt,
     event: input.event,
     id: runId,
     mode: input.mode,
-    status: actionability === "ignore" ? "skipped" : "pending",
+    status: shouldEnqueue ? "pending" : "skipped",
   };
 
   await dependencies.reviewRunRepository.save(run);
 
-  if (actionability === "ignore") {
+  if (!shouldEnqueue) {
     return {
       actionability,
       duplicate: false,
@@ -89,12 +91,9 @@ export async function ingestReviewEvent(
   }
 
   if (input.event.headSha === null) {
-    return {
-      actionability,
-      duplicate: false,
-      enqueued: false,
-      runId,
-    };
+    throw new Error(
+      "Unreachable: headSha is null despite shouldEnqueue being true",
+    );
   }
 
   const job: ReviewJobPayload = {

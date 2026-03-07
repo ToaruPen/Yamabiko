@@ -17,17 +17,26 @@ function hasProperty<K extends string>(
   return key in value;
 }
 
+function hasRetryableCauseCode(error: TypeError): boolean {
+  const cause = (error as { cause?: { code?: string } }).cause;
+  return (
+    cause !== undefined &&
+    typeof cause.code === "string" &&
+    RETRYABLE_ERROR_CODES.has(cause.code)
+  );
+}
+
 export function isRetryableError(error: unknown): boolean {
   if (!(error instanceof Error)) {
     return false;
   }
 
-  if (
-    error instanceof TypeError ||
-    error instanceof RangeError ||
-    error instanceof SyntaxError
-  ) {
+  if (error instanceof RangeError || error instanceof SyntaxError) {
     return false;
+  }
+
+  if (error instanceof TypeError) {
+    return hasRetryableCauseCode(error);
   }
 
   if (

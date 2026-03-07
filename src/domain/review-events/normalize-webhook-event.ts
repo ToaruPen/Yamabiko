@@ -20,7 +20,7 @@ const pullRequestSchema = z.object({
   head: z.object({
     sha: z.string(),
   }),
-  number: z.number(),
+  number: z.number().int().positive(),
 });
 
 const issueCommentSchema = z.object({
@@ -31,7 +31,7 @@ const issueCommentSchema = z.object({
     }),
   }),
   issue: z.object({
-    number: z.number(),
+    number: z.number().int().positive(),
     pull_request: z.record(z.string(), z.unknown()),
   }),
   repository: repositorySchema,

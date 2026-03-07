@@ -159,7 +159,7 @@ describe("webhook intake integration", () => {
     expect(savedRun).not.toBeNull();
     expect(savedRun?.event.kind).toBe("issue_comment");
     expect(savedRun?.event.headSha).toBeNull();
-    expect(savedRun?.status).toBe("pending");
+    expect(savedRun?.status).toBe("skipped");
 
     expect(reviewJobQueue.snapshot()).toHaveLength(0);
   });

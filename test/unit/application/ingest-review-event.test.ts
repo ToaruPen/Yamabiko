@@ -113,6 +113,7 @@ describe("ingestReviewEvent", () => {
     if (result.runId !== null) {
       const savedRun = await reviewRunRepository.findById(result.runId);
       expect(savedRun).not.toBeNull();
+      expect(savedRun?.status).toBe("skipped");
     }
   });
 

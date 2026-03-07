@@ -71,6 +71,30 @@ describe("isRetryableError", () => {
     expect(isRetryableError(error)).toBe(false);
   });
 
+  it("returns true for TypeError with retryable cause.code", () => {
+    const retryableCodes = ["ECONNRESET", "ETIMEDOUT", "EAI_AGAIN"] as const;
+
+    for (const code of retryableCodes) {
+      const error = new TypeError("fetch failed");
+      (error as { cause: { code: string } }).cause = { code };
+
+      expect(isRetryableError(error)).toBe(true);
+    }
+  });
+
+  it("returns false for TypeError with non-retryable cause.code", () => {
+    const error = new TypeError("fetch failed");
+    (error as { cause: { code: string } }).cause = { code: "UNKNOWN" };
+
+    expect(isRetryableError(error)).toBe(false);
+  });
+
+  it("returns false for TypeError without cause", () => {
+    const error = new TypeError("Wrong input type");
+
+    expect(isRetryableError(error)).toBe(false);
+  });
+
   it("returns false for programmer errors", () => {
     const errors = [
       new TypeError("Wrong input type"),
