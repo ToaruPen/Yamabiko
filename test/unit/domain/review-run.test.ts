@@ -45,10 +45,10 @@ describe("ReviewRun", () => {
       id: "run-123",
       mode: "suggest-only",
       startedAt: "2026-03-07T00:01:00.000Z",
-      status: "pending",
+      status: "failed",
     };
 
-    expect(run.status).toBe("pending");
+    expect(run.status).toBe("failed");
     expect(run.startedAt).toBe("2026-03-07T00:01:00.000Z");
     expect(run.completedAt).toBe("2026-03-07T00:05:00.000Z");
     expect(run.errorMessage).toBe("lint failed");

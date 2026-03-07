@@ -44,7 +44,16 @@ async function main(): Promise<void> {
       return;
     }
 
-    const payload = reviewJobPayloadSchema.parse(job.data);
+    const parseResult = reviewJobPayloadSchema.safeParse(job.data);
+    if (!parseResult.success) {
+      console.error(
+        `Invalid job payload for job ${job.id}:`,
+        parseResult.error.message,
+      );
+      return;
+    }
+
+    const payload = parseResult.data;
     const logger = createJobLogger({
       jobId: job.id,
       runId: payload.runId,

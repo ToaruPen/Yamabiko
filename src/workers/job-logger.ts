@@ -10,7 +10,8 @@ export interface JobLogEntry {
     | "job.processing"
     | "job.completed"
     | "job.failed"
-    | "job.retrying";
+    | "job.retrying"
+    | "job.dead_lettered";
   jobId: string;
   runId: string;
   timestamp: string;
@@ -26,6 +27,7 @@ export interface JobLogger {
   completed(durationMs: number): void;
   failed(error: unknown, durationMs: number): void;
   retrying(error: unknown, nextAttempt: number): void;
+  deadLettered(error: unknown): void;
 }
 
 type JobLogSink = (entry: JobLogEntry) => void;
@@ -54,6 +56,9 @@ export function createJobLogger(
   return {
     completed(durationMs) {
       emit("job.completed", { durationMs });
+    },
+    deadLettered(error) {
+      emit("job.dead_lettered", { error: String(error) });
     },
     failed(error, durationMs) {
       emit("job.failed", {

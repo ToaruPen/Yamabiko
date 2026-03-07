@@ -55,15 +55,18 @@ export async function handleReviewJob(
 
     deps.logger.completed(Date.now() - startedAtMs);
   } catch (error) {
+    if (isRetryableError(error)) {
+      await deps.reviewRunRepository.updateStatus(run.id, "processing", {
+        errorMessage: String(error),
+      });
+      deps.logger.retrying(error, NEXT_ATTEMPT_ON_RETRY);
+      throw error;
+    }
+
     await deps.reviewRunRepository.updateStatus(run.id, "failed", {
       completedAt: now().toISOString(),
       errorMessage: String(error),
     });
-
-    if (isRetryableError(error)) {
-      deps.logger.retrying(error, NEXT_ATTEMPT_ON_RETRY);
-      throw error;
-    }
 
     deps.logger.failed(error, Date.now() - startedAtMs);
   }
