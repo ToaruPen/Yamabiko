@@ -1,5 +1,7 @@
+import { drizzle } from "drizzle-orm/node-postgres";
+import pg from "pg";
 import { PgBoss } from "pg-boss";
-import { InMemoryReviewRunRepository } from "../../adapters/persistence/in-memory-review-run-repository.js";
+import { DrizzleReviewRunRepository } from "../../adapters/persistence/drizzle-review-run-repository.js";
 import {
   PgBossReviewJobQueue,
   REVIEW_JOBS_DLQ,
@@ -14,6 +16,8 @@ import { createJobLogger } from "../../workers/job-logger.js";
 
 async function main(): Promise<void> {
   const config = loadWorkerConfig(process.env);
+  const pool = new pg.Pool({ connectionString: config.databaseUrl });
+  const db = drizzle(pool);
   const boss = new PgBoss(config.databaseUrl);
 
   boss.on("error", (error) => {
@@ -25,8 +29,7 @@ async function main(): Promise<void> {
   const queue = new PgBossReviewJobQueue(boss);
   await queue.createQueue();
 
-  // TODO: replace with Postgres-backed repository.
-  const reviewRunRepository = new InMemoryReviewRunRepository();
+  const reviewRunRepository = new DrizzleReviewRunRepository(db);
   const fixExecutor = new StubFixExecutor();
 
   await boss.work(REVIEW_JOBS_QUEUE, async ([job]) => {
@@ -94,6 +97,7 @@ async function main(): Promise<void> {
 
     try {
       await boss.stop({ graceful: true, timeout: 30_000 });
+      await pool.end();
       process.exit(0);
     } catch (error) {
       console.error("Failed to stop pg-boss worker:", error);

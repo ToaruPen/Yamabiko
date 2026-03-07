@@ -46,6 +46,18 @@
           "primaryKey": false,
           "notNull": true
         },
+        "actor_login": {
+          "name": "actor_login",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "completed_at": {
           "name": "completed_at",
           "type": "timestamp with time zone",
@@ -92,6 +104,12 @@
         "pull_request_number": {
           "name": "pull_request_number",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "received_at": {
+          "name": "received_at",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
         },
