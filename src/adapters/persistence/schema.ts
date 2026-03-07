@@ -8,13 +8,14 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { ACTIONABILITIES } from "../../domain/policy/actionability.js";
-import { RUN_MODES } from "../../domain/runs/review-run.js";
+import { RUN_MODES, RUN_STATUSES } from "../../domain/runs/review-run.js";
 
 export const reviewActionabilityEnum = pgEnum(
   "review_actionability",
   ACTIONABILITIES,
 );
 export const runModeEnum = pgEnum("run_mode", RUN_MODES);
+export const runStatusEnum = pgEnum("run_status", RUN_STATUSES);
 
 export const reviewRunsTable = pgTable("review_runs", {
   actionability: reviewActionabilityEnum("actionability").notNull(),
@@ -29,7 +30,7 @@ export const reviewRunsTable = pgTable("review_runs", {
   repositoryName: text("repository_name").notNull(),
   repositoryOwner: text("repository_owner").notNull(),
   startedAt: timestamp("started_at", { withTimezone: true }),
-  status: text("status").notNull().default("pending"),
+  status: runStatusEnum("status").notNull().default("pending"),
 });
 
 export const webhookDeliveriesTable = pgTable("webhook_deliveries", {

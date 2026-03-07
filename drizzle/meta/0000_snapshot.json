@@ -115,7 +115,8 @@
         },
         "status": {
           "name": "status",
-          "type": "text",
+          "type": "run_status",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
           "default": "'pending'"
@@ -155,8 +156,7 @@
           "name": "processed",
           "type": "boolean",
           "primaryKey": false,
-          "notNull": true,
-          "default": false
+          "notNull": true
         },
         "received_at": {
           "name": "received_at",
@@ -184,6 +184,11 @@
       "name": "run_mode",
       "schema": "public",
       "values": ["dry-run", "suggest-only", "push-enabled"]
+    },
+    "public.run_status": {
+      "name": "run_status",
+      "schema": "public",
+      "values": ["pending", "processing", "completed", "failed", "skipped"]
     }
   },
   "schemas": {},
