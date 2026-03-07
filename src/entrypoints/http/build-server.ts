@@ -4,6 +4,7 @@ import type { DeliveryRepository } from "../../adapters/persistence/delivery-rep
 import type { ReviewRunRepository } from "../../adapters/persistence/review-run-repository.js";
 import type { ReviewJobQueue } from "../../adapters/queue/review-job-queue.js";
 import { loadRuntimeConfig } from "../../config/env.js";
+import { webhookRoute } from "./webhook-route.js";
 
 export interface ServerDependencies {
   deliveryRepository: DeliveryRepository;
@@ -49,6 +50,8 @@ export function buildServer(
     service: "call-n-response",
     status: "ok",
   }));
+
+  server.register(webhookRoute);
 
   return server;
 }
