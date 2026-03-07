@@ -15,9 +15,9 @@ export interface ReviewRunRepository {
     id: string,
     status: RunStatus,
     metadata?: {
-      startedAt?: string;
-      completedAt?: string;
-      errorMessage?: string;
+      startedAt?: string | null;
+      completedAt?: string | null;
+      errorMessage?: string | null;
     },
   ): Promise<void>;
 }

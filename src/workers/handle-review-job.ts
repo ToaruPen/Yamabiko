@@ -30,9 +30,15 @@ export async function handleReviewJob(
     return;
   }
 
-  if (claimResult === "terminal" || claimResult === "already-processing") {
+  if (claimResult === "terminal") {
     deps.logger.completed(0);
     return;
+  }
+
+  if (claimResult === "already-processing") {
+    throw new Error(
+      `ReviewRun ${job.runId} is already being processed by another worker`,
+    );
   }
 
   deps.logger.processing();
@@ -49,6 +55,7 @@ export async function handleReviewJob(
     await deps.fixExecutor.execute({ run });
     await deps.reviewRunRepository.updateStatus(run.id, "completed", {
       completedAt: now().toISOString(),
+      errorMessage: null,
     });
 
     deps.logger.completed(Date.now() - startedAtMs);

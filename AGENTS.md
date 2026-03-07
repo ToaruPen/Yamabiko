@@ -7,7 +7,7 @@
 ## WHAT
 - `src/`: application code and architecture layers. See `src/AGENTS.md`.
   - `src/entrypoints/worker/`: pg-boss consumer that processes queued review jobs.
-  - `src/workers/`: job handler, failure classification, and structured job logging.
+  - `src/workers/`: job handler, dead-letter handler, failure classification, and structured job logging.
   - `src/adapters/queue/`: `ReviewJobQueue` port implementations (pg-boss and in-memory).
   - `src/application/ports/`: inward-facing interfaces including `ReviewRunRepository` (with atomic `claimForProcessing`).
 - `test/`: unit and integration coverage. See `test/AGENTS.md`.

@@ -55,9 +55,9 @@ export class InMemoryReviewRunRepository implements ReviewRunRepository {
     id: string,
     status: RunStatus,
     metadata?: {
-      startedAt?: string;
-      completedAt?: string;
-      errorMessage?: string;
+      startedAt?: string | null;
+      completedAt?: string | null;
+      errorMessage?: string | null;
     },
   ): Promise<void> {
     const current = this.runs.get(id);
@@ -66,22 +66,41 @@ export class InMemoryReviewRunRepository implements ReviewRunRepository {
       return Promise.reject(new Error(`ReviewRun not found: ${id}`));
     }
 
-    const filtered = filterUndefined(metadata);
-    const updatedRun: ReviewRun = { ...current, ...filtered, status };
+    const updatedRun: ReviewRun = { ...current, status };
+
+    if (metadata) {
+      applyStatusMetadata(updatedRun, metadata);
+    }
 
     this.runs.set(id, updatedRun);
     return Promise.resolve();
   }
 }
 
-function filterUndefined<T extends Record<string, unknown>>(
-  obj?: T,
-): Partial<T> {
-  if (obj === undefined) {
-    return {};
+// Metadata semantics: undefined = keep, null = clear, string = set
+function applyStatusMetadata(
+  run: ReviewRun,
+  metadata: {
+    startedAt?: string | null;
+    completedAt?: string | null;
+    errorMessage?: string | null;
+  },
+): void {
+  if (metadata.startedAt === null) {
+    delete run.startedAt;
+  } else if (metadata.startedAt !== undefined) {
+    run.startedAt = metadata.startedAt;
   }
 
-  return Object.fromEntries(
-    Object.entries(obj).filter(([, v]) => v !== undefined),
-  ) as Partial<T>;
+  if (metadata.completedAt === null) {
+    delete run.completedAt;
+  } else if (metadata.completedAt !== undefined) {
+    run.completedAt = metadata.completedAt;
+  }
+
+  if (metadata.errorMessage === null) {
+    delete run.errorMessage;
+  } else if (metadata.errorMessage !== undefined) {
+    run.errorMessage = metadata.errorMessage;
+  }
 }

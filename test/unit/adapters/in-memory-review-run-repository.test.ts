@@ -43,6 +43,29 @@ describe("InMemoryReviewRunRepository", () => {
     });
   });
 
+  it("updateStatus clears fields when metadata contains null", async () => {
+    const repository = new InMemoryReviewRunRepository();
+    const run = createReviewRun("run-clear", {
+      errorMessage: "stale error from prior attempt",
+      startedAt: "2026-03-07T00:01:00.000Z",
+    });
+
+    await repository.save(run);
+    await repository.updateStatus("run-clear", "completed", {
+      completedAt: "2026-03-07T00:05:00.000Z",
+      errorMessage: null,
+    });
+
+    const found = await repository.findById("run-clear");
+
+    expect(found).toMatchObject({
+      completedAt: "2026-03-07T00:05:00.000Z",
+      startedAt: "2026-03-07T00:01:00.000Z",
+      status: "completed",
+    });
+    expect(found).not.toHaveProperty("errorMessage");
+  });
+
   it("updateStatus throws when run does not exist", async () => {
     const repository = new InMemoryReviewRunRepository();
 

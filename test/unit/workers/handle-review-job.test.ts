@@ -212,6 +212,37 @@ describe("handleReviewJob", () => {
     expect(logger.retrying).not.toHaveBeenCalled();
   });
 
+  it("throws when run is already being processed by another worker", async () => {
+    const reviewRunRepository = new InMemoryReviewRunRepository();
+    const run = createReviewRun("run-concurrent", {
+      startedAt: "2026-03-07T09:00:00.000Z",
+      status: "processing",
+    });
+    await reviewRunRepository.save(run);
+
+    const execute = vi.fn();
+    const fixExecutor: FixExecutor = { execute };
+    const logger = createLoggerMocks();
+
+    await expect(
+      handleReviewJob(
+        {
+          fixExecutor,
+          logger: logger.logger,
+          now: createNow("2026-03-07T11:30:00.000Z"),
+          reviewRunRepository,
+        },
+        createReviewJob({ runId: run.id }),
+      ),
+    ).rejects.toThrowError("already being processed");
+
+    const unchanged = await reviewRunRepository.findById(run.id);
+    expect(unchanged).toEqual(run);
+    expect(execute).not.toHaveBeenCalled();
+    expect(logger.received).toHaveBeenCalledTimes(1);
+    expect(logger.processing).not.toHaveBeenCalled();
+  });
+
   it("resets run to pending and rethrows retryable errors", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-03-07T12:00:00.000Z"));
@@ -332,6 +363,7 @@ describe("handleReviewJob", () => {
       startedAt: "2026-03-07T12:30:01.100Z",
       status: "completed",
     });
+    expect(afterSecondAttempt).not.toHaveProperty("errorMessage");
 
     expect(execute).toHaveBeenCalledTimes(2);
     expect(logger.retrying).toHaveBeenCalledWith(retryableError, 2);
