@@ -1,30 +1,109 @@
-import { loadRuntimeConfig } from "../../config/env.js";
+import { PgBoss } from "pg-boss";
+import { z } from "zod";
 
-const config = loadRuntimeConfig(process.env);
+import type {
+  FixExecutionResult,
+  FixExecutor,
+} from "../../adapters/llm/fix-executor.js";
+import { InMemoryReviewRunRepository } from "../../adapters/persistence/in-memory-review-run-repository.js";
+import {
+  PgBossReviewJobQueue,
+  REVIEW_JOBS_QUEUE,
+} from "../../adapters/queue/pg-boss-review-job-queue.js";
+import { loadWorkerConfig } from "../../config/env.js";
+import { handleReviewJob } from "../../workers/handle-review-job.js";
+import { createJobLogger } from "../../workers/job-logger.js";
 
-let heartbeat: NodeJS.Timeout | undefined;
-
-function stopWorker(exitCode: number): void {
-  if (heartbeat !== undefined) {
-    clearInterval(heartbeat);
-    heartbeat = undefined;
-  }
-
-  process.exit(exitCode);
-}
-
-process.stdout.write(
-  `Call-n-Response worker scaffold started in ${config.runMode} mode.\n`,
-);
-
-heartbeat = setInterval(() => {
-  process.stdout.write("worker heartbeat\n");
-}, 60_000);
-
-process.on("SIGINT", () => {
-  stopWorker(0);
+const reviewJobPayloadSchema = z.object({
+  headSha: z.string(),
+  pullRequestNumber: z.number().int(),
+  repositoryName: z.string(),
+  repositoryOwner: z.string(),
+  runId: z.string(),
 });
 
-process.on("SIGTERM", () => {
-  stopWorker(0);
+async function main(): Promise<void> {
+  const config = loadWorkerConfig(process.env);
+  const boss = new PgBoss(config.databaseUrl);
+
+  boss.on("error", (error) => {
+    console.error("pg-boss error:", error);
+  });
+
+  await boss.start();
+
+  const queue = new PgBossReviewJobQueue(boss);
+  await queue.createQueue();
+
+  // TODO: replace with Postgres-backed repository.
+  const reviewRunRepository = new InMemoryReviewRunRepository();
+  const fixExecutor = createStubFixExecutor();
+
+  await boss.work(REVIEW_JOBS_QUEUE, async ([job]) => {
+    if (job === undefined) {
+      return;
+    }
+
+    const payload = reviewJobPayloadSchema.parse(job.data);
+    const logger = createJobLogger({
+      jobId: job.id,
+      runId: payload.runId,
+    });
+
+    await handleReviewJob(
+      {
+        reviewRunRepository,
+        fixExecutor,
+        logger,
+      },
+      payload,
+    );
+  });
+
+  console.log(
+    `Worker started in ${config.runMode} mode, consuming from ${REVIEW_JOBS_QUEUE}`,
+  );
+
+  let isShuttingDown = false;
+
+  const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
+    if (isShuttingDown) {
+      return;
+    }
+
+    isShuttingDown = true;
+    console.log(`${signal} received, shutting down worker...`);
+
+    try {
+      await boss.stop({ graceful: true, timeout: 30_000 });
+      process.exit(0);
+    } catch (error) {
+      console.error("Failed to stop pg-boss worker:", error);
+      process.exit(1);
+    }
+  };
+
+  process.on("SIGTERM", () => {
+    void shutdown("SIGTERM");
+  });
+
+  process.on("SIGINT", () => {
+    void shutdown("SIGINT");
+  });
+}
+
+function createStubFixExecutor(): FixExecutor {
+  return {
+    execute(): Promise<FixExecutionResult> {
+      return Promise.resolve({
+        changedFiles: [],
+        summary: "stub executor - no real fix applied",
+      });
+    },
+  };
+}
+
+main().catch((error: unknown) => {
+  console.error("Worker failed to start:", error);
+  process.exit(1);
 });

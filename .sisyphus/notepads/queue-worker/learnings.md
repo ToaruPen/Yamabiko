@@ -70,3 +70,11 @@
 - Retry behavior follows pg-boss semantics: retryable errors are persisted as `failed`, logged with `logger.retrying(...)`, and rethrown; terminal errors are persisted as `failed`, logged with `logger.failed(...)`, and swallowed.
 - Duration logging is measured from `Date.now()` immediately after status flips to `processing`, then emitted on completion/failure independent of the injected `now()` metadata clock.
 - TDD coverage added in `test/unit/workers/handle-review-job.test.ts` for happy path, missing run, idempotent skips (`completed`/`failed`/`skipped`), retryable failure rethrow, and terminal failure swallow.
+
+## T8: Worker Entrypoint Wiring (2026-03-07)
+- Replaced heartbeat scaffold in `src/entrypoints/worker/main.ts` with a real pg-boss lifecycle: `new PgBoss(databaseUrl)` -> `start()` -> queue bootstrap (`createQueue()`) -> `work()` registration -> signal-based graceful stop.
+- Added `loadWorkerConfig()` in `src/config/env.ts` to parse worker-only env (`DATABASE_URL`, `RUN_MODE`) so worker startup no longer depends on `WEBHOOK_SECRET`.
+- `boss.work()` handler now consumes the first batch item (`async ([job]) => ...`) and validates payload shape via local Zod schema before calling `handleReviewJob(...)`.
+- Entrypoint currently uses `InMemoryReviewRunRepository` behind an explicit TODO marker for future Postgres replacement.
+- `FixExecutor` contract in this codebase currently returns `{ changedFiles, summary }` (not `{ applied, details }`), so the worker stub executor returns empty changes with a stub summary.
+- `docker-compose.yml` worker service already omits `WEBHOOK_SECRET`; no compose change was required.
