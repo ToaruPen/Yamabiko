@@ -104,10 +104,13 @@ Phase 1+2 (webhook intake and event normalization) is implemented:
 
 - POST /webhook endpoint with HMAC signature verification
 - Event normalization for `pull_request_review`, `pull_request_review_comment`, and `issue_comment`
-- Durable delivery persistence with idempotent deduplication (X-GitHub-Delivery)
+- Idempotent delivery handling keyed by `X-GitHub-Delivery`
 - Review run creation with actionability classification
 - Job queue handoff for actionable events
 - 48+ unit and integration tests
+
+Current default runtime uses in-memory repositories in Phase 1+2.
+PostgreSQL-backed durable persistence is planned for Phase 4+.
 
 Phase 3 (queue integration and worker orchestration) is in progress.
 
