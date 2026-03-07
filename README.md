@@ -128,13 +128,12 @@ pnpm lint       # Biome formatting + ESLint type-aware checks
 
 ### Local development
 
-Requires environment variables:
-
 ```bash
-export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/call_n_response"
 export WEBHOOK_SECRET="your-webhook-secret"
 pnpm dev
 ```
+
+> **Note:** `DATABASE_URL` is not required for Phase 1+2 (in-memory repositories are used by default). It will be needed when PostgreSQL-backed persistence is added in Phase 4+.
 
 The test suite covers webhook HMAC signature verification, idempotent deduplication via `X-GitHub-Delivery`, and event normalization for all supported GitHub event types.
 
