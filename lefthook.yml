@@ -4,7 +4,7 @@ pre-commit:
   piped: true
   commands:
     biome:
-      run: pnpm biome check --write --staged
+      run: pnpm biome check --write --staged --no-errors-on-unmatched
       stage_fixed: true
       priority: 1
     eslint:
