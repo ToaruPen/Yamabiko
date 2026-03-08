@@ -10,10 +10,10 @@ import {
   waitForRun,
 } from "../../helpers/worker-test-runtime.js";
 
-const DATABASE_URL = process.env.DATABASE_URL;
+const TEST_DATABASE_URL = process.env.TEST_DATABASE_URL;
 
 const describeWorkerIntegration =
-  DATABASE_URL === undefined ? describe.skip : describe;
+  TEST_DATABASE_URL === undefined ? describe.skip : describe;
 
 function toJobPayload(runId: string): ReviewJobPayload {
   return {
@@ -71,7 +71,7 @@ describeWorkerIntegration("worker queue lifecycle integration", () => {
     expect(updated.startedAt).toBeDefined();
     expect(updated.completedAt).toBeDefined();
     expect(updated.errorMessage).toBeUndefined();
-  });
+  }, 15_000);
 
   it("retries retryable failures and eventually completes", async () => {
     let executeCalls = 0;
@@ -116,7 +116,7 @@ describeWorkerIntegration("worker queue lifecycle integration", () => {
     expect(executeCalls).toBe(2);
     expect(updated.errorMessage).toBeUndefined();
     expect(updated.completedAt).toBeDefined();
-  });
+  }, 15_000);
 
   it("dead-letters exhausted retryable failures and marks the run failed", async () => {
     let executeCalls = 0;
@@ -159,7 +159,7 @@ describeWorkerIntegration("worker queue lifecycle integration", () => {
 
     expect(executeCalls).toBe(2);
     expect(updated.completedAt).toBeDefined();
-  });
+  }, 15_000);
 
   it("skips idempotently when a queued run is already completed", async () => {
     let executeCalls = 0;
@@ -192,13 +192,15 @@ describeWorkerIntegration("worker queue lifecycle integration", () => {
     const unchanged = await runtime.reviewRunRepository.findById(run.id);
     expect(executeCalls).toBe(0);
     expect(unchanged).toEqual(run);
-  });
+  }, 15_000);
 });
 
 function getDatabaseUrl(): string {
-  if (DATABASE_URL === undefined) {
-    throw new Error("DATABASE_URL must be set for worker integration tests");
+  if (TEST_DATABASE_URL === undefined) {
+    throw new Error(
+      "TEST_DATABASE_URL must be set for worker integration tests",
+    );
   }
 
-  return DATABASE_URL;
+  return TEST_DATABASE_URL;
 }

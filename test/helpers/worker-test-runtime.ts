@@ -45,6 +45,8 @@ type FindReviewRunResult = Awaited<
 export async function resetWorkerTestDatabase(
   connectionString: string,
 ): Promise<void> {
+  assertSafeTestDatabaseUrl(connectionString);
+
   const client = new pg.Client({ connectionString });
   await client.connect();
 
@@ -67,6 +69,8 @@ export async function createWorkerTestRuntime(
   fixExecutor: FixExecutor,
   queueOptions?: ReviewJobQueueOptions,
 ): Promise<WorkerTestRuntime> {
+  assertSafeTestDatabaseUrl(connectionString);
+
   const pool = new pg.Pool({ connectionString });
   const db = drizzle(pool);
   const boss = new PgBoss(connectionString);
@@ -172,6 +176,29 @@ async function findMigrationFiles(): Promise<string[]> {
     .filter((entry) => entry.isFile() && entry.name.endsWith(".sql"))
     .map((entry) => path.join(DRIZZLE_DIRECTORY, entry.name))
     .sort();
+}
+
+function assertSafeTestDatabaseUrl(connectionString: string): void {
+  if (process.env.TEST_DATABASE_URL === undefined) {
+    throw new Error(
+      "TEST_DATABASE_URL must be set for worker integration tests",
+    );
+  }
+
+  if (connectionString !== process.env.TEST_DATABASE_URL) {
+    throw new Error("Worker integration tests must use TEST_DATABASE_URL");
+  }
+
+  const parsed = new URL(connectionString);
+  const databaseName = parsed.pathname.replace(/^\//, "");
+  const isLocalhost =
+    parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
+
+  if (!isLocalhost || !databaseName.includes("test")) {
+    throw new Error(
+      `Unsafe worker test database target: ${parsed.hostname}/${databaseName}`,
+    );
+  }
 }
 
 function delay(ms: number): Promise<void> {

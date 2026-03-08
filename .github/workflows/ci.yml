@@ -16,19 +16,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/yamabiko
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/yamabiko_test
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/yamabiko_test
 
     services:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_DB: yamabiko
+          POSTGRES_DB: yamabiko_test
           POSTGRES_PASSWORD: postgres
           POSTGRES_USER: postgres
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U postgres -d yamabiko"
+          --health-cmd "pg_isready -U postgres -d yamabiko_test"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
