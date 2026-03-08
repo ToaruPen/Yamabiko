@@ -48,6 +48,26 @@ describe("PgBossReviewJobQueue", () => {
     });
   });
 
+  it("createQueue allows retry settings to be overridden", async () => {
+    const bossMock = {
+      send: vi.fn().mockResolvedValue("job-id-1"),
+      createQueue: vi.fn().mockResolvedValue(undefined),
+    };
+    const queue = new PgBossReviewJobQueue(bossMock as unknown as PgBoss, {
+      retryDelay: 1,
+      retryLimit: 1,
+    });
+
+    await queue.createQueue();
+
+    expect(bossMock.createQueue).toHaveBeenNthCalledWith(2, REVIEW_JOBS_QUEUE, {
+      retryLimit: 1,
+      retryDelay: 1,
+      retryBackoff: true,
+      deadLetter: REVIEW_JOBS_DLQ,
+    });
+  });
+
   it("uses constructor injected pg-boss instance", async () => {
     const bossMock = {
       send: vi.fn().mockResolvedValue("job-id-2"),
