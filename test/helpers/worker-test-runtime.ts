@@ -115,18 +115,14 @@ export async function createWorkerTestRuntime(
 export async function waitForRun(
   repository: DrizzleReviewRunRepository,
   runId: string,
-  predicate: (run: FindReviewRunResult) => boolean,
+  predicate: (run: NonNullable<FindReviewRunResult>) => boolean,
   timeoutMs: number = 5_000,
 ): Promise<NonNullable<FindReviewRunResult>> {
   const deadline = Date.now() + timeoutMs;
 
   while (Date.now() < deadline) {
     const run = await repository.findById(runId);
-    if (predicate(run)) {
-      if (run === null) {
-        throw new Error(`Expected run ${runId} to exist`);
-      }
-
+    if (run !== null && predicate(run)) {
       return run;
     }
 
@@ -166,11 +162,9 @@ async function runSqlStatements(client: Client, sql: string): Promise<void> {
         .split(statementBreakpoint)
         .map((statement) => statement.trim())
         .filter((statement) => statement.length > 0)
-    : sql
-        // TODO: Replace this semicolon fallback with a SQL-aware parser before adding custom migrations.
-        .split(";")
-        .map((statement) => statement.trim())
-        .filter((statement) => statement.length > 0);
+    : [sql.trim()].filter((statement) => statement.length > 0);
+
+  // TODO: Replace the single-statement fallback with a SQL-aware splitter before adding custom migrations.
 
   for (const statement of executableStatements) {
     await client.query(statement);

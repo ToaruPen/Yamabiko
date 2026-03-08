@@ -64,7 +64,7 @@ describeWorkerIntegration("worker queue lifecycle integration", () => {
     const updated = await waitForRun(
       runtime.reviewRunRepository,
       run.id,
-      (candidate) => candidate?.status === "completed",
+      (candidate) => candidate.status === "completed",
     );
 
     expect(executeCalls).toBe(1);
@@ -104,7 +104,7 @@ describeWorkerIntegration("worker queue lifecycle integration", () => {
     const updated = await waitForRun(
       runtime.reviewRunRepository,
       run.id,
-      (candidate) => candidate?.status === "completed",
+      (candidate) => candidate.status === "completed",
       10_000,
     );
 
@@ -144,7 +144,7 @@ describeWorkerIntegration("worker queue lifecycle integration", () => {
       runtime.reviewRunRepository,
       run.id,
       (candidate) =>
-        candidate?.status === "failed" &&
+        candidate.status === "failed" &&
         candidate.errorMessage?.includes(
           "dead-lettered after exhausting retries",
         ) === true,
