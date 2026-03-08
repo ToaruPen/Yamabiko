@@ -60,6 +60,8 @@ describe("PgBossReviewJobQueue", () => {
 
     await queue.createQueue();
 
+    expect(bossMock.createQueue).toHaveBeenCalledTimes(2);
+    expect(bossMock.createQueue).toHaveBeenNthCalledWith(1, REVIEW_JOBS_DLQ);
     expect(bossMock.createQueue).toHaveBeenNthCalledWith(2, REVIEW_JOBS_QUEUE, {
       retryLimit: 1,
       retryDelay: 1,
