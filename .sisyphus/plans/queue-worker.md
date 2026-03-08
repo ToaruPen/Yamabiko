@@ -37,7 +37,7 @@ Wire pg-boss into the existing queue adapter interface and implement a worker th
 
 - [x] **T4**: Create `PgBossReviewJobQueue` adapter
   - Implement `ReviewJobQueue.enqueue()` using pg-boss `send()`
-  - Add `createReviewQueue()` for queue creation with retry policy (retryLimit: 3, retryDelay: 30, retryBackoff: true)
+  - Add `createQueue()` for queue creation with retry policy (retryLimit: 3, retryDelay: 30, retryBackoff: true)
   - Add dead letter queue `review-jobs-dlq` for terminal failures
   - TDD: unit tests with pg-boss constructor injection (mockable)
   - Files: `src/adapters/queue/pg-boss-review-job-queue.ts`
