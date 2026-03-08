@@ -100,19 +100,22 @@ Test naming:
 
 ## Status
 
-Phase 1+2 (webhook intake and event normalization) is implemented:
+The initial webhook intake slice is implemented:
 
-- POST /webhook endpoint with HMAC signature verification
+- POST `/webhook` with HMAC signature verification
 - Event normalization for `pull_request_review`, `pull_request_review_comment`, and `issue_comment`
 - Idempotent delivery handling keyed by `X-GitHub-Delivery`
-- Review run creation with actionability classification
-- Job queue handoff for actionable events
-- 48+ unit and integration tests
+- Review run creation with actionability classification and queue handoff for actionable events
+- pg-boss worker runtime with run status transitions, retry classification, stale-run recovery, and dead-letter handling
+- 95 tests in the suite, including worker integration tests that run when `DATABASE_URL` is set
 
-Current default runtime uses in-memory repositories in Phase 1+2.
-PostgreSQL-backed durable persistence is planned for Phase 4+.
+Current runtime wiring is split:
 
-Phase 3 (queue integration and worker orchestration) is in progress.
+- `src/entrypoints/http/server.ts` still boots the HTTP server with in-memory adapters by default
+- `src/entrypoints/worker/main.ts` uses PostgreSQL + Drizzle + pg-boss
+- `test/integration/workers/` exercises the real worker path when a PostgreSQL `DATABASE_URL` is available (CI provides one)
+
+Phase 4 (policy evaluation and GitHub write-back) and Phase 5 (deterministic apply path) are still ahead.
 
 ## Getting Started
 
@@ -125,7 +128,7 @@ Phase 3 (queue integration and worker orchestration) is in progress.
 
 ```bash
 pnpm install
-pnpm test       # 48+ unit and integration tests
+pnpm test       # unit tests + HTTP integration tests; worker integration tests run when DATABASE_URL is set
 pnpm lint       # Biome formatting + ESLint type-aware checks
 ```
 
@@ -136,9 +139,9 @@ export WEBHOOK_SECRET="your-webhook-secret"
 pnpm dev
 ```
 
-> **Note:** `DATABASE_URL` is not required for Phase 1+2 (in-memory repositories are used by default). It will be needed when PostgreSQL-backed persistence is added in Phase 4+.
+> **Note:** `pnpm dev` starts the HTTP server with in-memory adapters. `pnpm dev:worker` and the worker integration tests require a PostgreSQL `DATABASE_URL`.
 
-The test suite covers webhook HMAC signature verification, idempotent deduplication via `X-GitHub-Delivery`, and event normalization for all supported GitHub event types.
+The test suite covers webhook HMAC signature verification, idempotent deduplication via `X-GitHub-Delivery`, event normalization for all supported GitHub event types, and queue/worker lifecycle with a real PostgreSQL-backed pg-boss runtime when enabled.
 
 ## Planning
 
