@@ -11,7 +11,9 @@ export default defineConfig({
       include: [
         "src/domain/**/*.ts",
         "src/application/**/*.ts",
+        "src/adapters/queue/**/*.ts",
         "src/workers/**/*.ts",
+        "src/entrypoints/worker/**/*.ts",
         "src/contracts/**/*.ts",
         "src/config/**/*.ts",
       ],
