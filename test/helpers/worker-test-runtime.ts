@@ -159,12 +159,20 @@ export async function waitForLogEntry(
 }
 
 async function runSqlStatements(client: Client, sql: string): Promise<void> {
-  const statements = sql
-    .split("--> statement-breakpoint")
-    .map((statement) => statement.trim())
-    .filter((statement) => statement.length > 0);
+  const statementBreakpoint = "--> statement-breakpoint";
+  const hasStatementBreakpoint = sql.includes(statementBreakpoint);
+  const executableStatements = hasStatementBreakpoint
+    ? sql
+        .split(statementBreakpoint)
+        .map((statement) => statement.trim())
+        .filter((statement) => statement.length > 0)
+    : sql
+        // TODO: Replace this semicolon fallback with a SQL-aware parser before adding custom migrations.
+        .split(";")
+        .map((statement) => statement.trim())
+        .filter((statement) => statement.length > 0);
 
-  for (const statement of statements) {
+  for (const statement of executableStatements) {
     await client.query(statement);
   }
 }
