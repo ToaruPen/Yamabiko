@@ -11,7 +11,7 @@ export const pullRequestReviewPayload = {
     head: { sha: "abc123def456" },
   },
   repository: {
-    name: "call-n-response",
+    name: "yamabiko",
     owner: { login: "ToaruPen" },
   },
   sender: { login: "reviewer-bot" },

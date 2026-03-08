@@ -1,4 +1,4 @@
-# Call-n-Response
+# Yamabiko
 
 Event-driven automation for ingesting GitHub PR review bot feedback, applying fixes, and pushing updates safely.
 

@@ -1,6 +1,3 @@
-import type { DeliveryRepository } from "../../adapters/persistence/delivery-repository.js";
-import type { ReviewRunRepository } from "../../adapters/persistence/review-run-repository.js";
-import type { ReviewJobQueue } from "../../adapters/queue/review-job-queue.js";
 import type { ReviewJobPayload } from "../../contracts/review-job-payload.js";
 import type { WebhookDelivery } from "../../domain/deliveries/webhook-delivery.js";
 import {
@@ -11,6 +8,9 @@ import {
 import type { ReviewFeedbackEvent } from "../../domain/review-events/review-feedback-event.js";
 import type { ReviewRun, RunMode } from "../../domain/runs/review-run.js";
 import { createRunId } from "../../shared/ids.js";
+import type { DeliveryRepository } from "../ports/delivery-repository.js";
+import type { ReviewJobQueue } from "../ports/review-job-queue.js";
+import type { ReviewRunRepository } from "../ports/review-run-repository.js";
 
 export interface IngestReviewEventDependencies {
   deliveryRepository: DeliveryRepository;
@@ -68,17 +68,20 @@ export async function ingestReviewEvent(
   const createdAt = (dependencies.now ?? (() => new Date()))().toISOString();
   const actionability = classifyActionability(input.signal);
   const runId = createRunId();
+  const shouldEnqueue =
+    actionability !== "ignore" && input.event.headSha !== null;
   const run: ReviewRun = {
     actionability,
     createdAt,
     event: input.event,
     id: runId,
     mode: input.mode,
+    status: shouldEnqueue ? "pending" : "skipped",
   };
 
   await dependencies.reviewRunRepository.save(run);
 
-  if (actionability === "ignore") {
+  if (!shouldEnqueue) {
     return {
       actionability,
       duplicate: false,
@@ -87,13 +90,13 @@ export async function ingestReviewEvent(
     };
   }
 
+  // Type guard: ensures headSha is narrowed to string for job payload construction.
+  // Logically unreachable because shouldEnqueue requires headSha !== null,
+  // but kept as a safety net for future condition changes.
   if (input.event.headSha === null) {
-    return {
-      actionability,
-      duplicate: false,
-      enqueued: false,
-      runId,
-    };
+    throw new Error(
+      "Unreachable: headSha is null despite shouldEnqueue being true",
+    );
   }
 
   const job: ReviewJobPayload = {

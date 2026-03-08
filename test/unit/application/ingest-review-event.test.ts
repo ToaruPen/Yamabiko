@@ -28,7 +28,7 @@ describe("ingestReviewEvent", () => {
           pullRequestNumber: 12,
           receivedAt: "2026-03-07T00:00:00.000Z",
           repository: {
-            name: "Call-n-Response",
+            name: "Yamabiko",
             owner: "ToaruPen",
           },
         },
@@ -63,6 +63,7 @@ describe("ingestReviewEvent", () => {
       receivedAt: "2026-03-07T00:00:00.000Z",
     });
     expect(savedRun?.actionability).toBe("suggest");
+    expect(savedRun?.status).toBe("pending");
     expect(reviewJobQueue.snapshot()).toHaveLength(1);
   });
 
@@ -88,7 +89,7 @@ describe("ingestReviewEvent", () => {
           pullRequestNumber: 12,
           receivedAt: "2026-03-07T00:00:00.000Z",
           repository: {
-            name: "Call-n-Response",
+            name: "Yamabiko",
             owner: "ToaruPen",
           },
         },
@@ -112,7 +113,60 @@ describe("ingestReviewEvent", () => {
     if (result.runId !== null) {
       const savedRun = await reviewRunRepository.findById(result.runId);
       expect(savedRun).not.toBeNull();
+      expect(savedRun?.status).toBe("skipped");
     }
+  });
+
+  it("marks ignored review feedback as skipped and does not enqueue", async () => {
+    const deliveryRepository = new InMemoryDeliveryRepository();
+    const reviewRunRepository = new InMemoryReviewRunRepository();
+    const reviewJobQueue = new InMemoryReviewJobQueue();
+
+    const result = await ingestReviewEvent(
+      {
+        deliveryRepository,
+        now: () => new Date("2026-03-07T00:00:00.000Z"),
+        reviewJobQueue,
+        reviewRunRepository,
+      },
+      {
+        deliveryId: "delivery-ignored",
+        event: {
+          actorLogin: "codex-bot",
+          body: "Please fix the lint error in src/config/env.ts.",
+          headSha: "abc123",
+          kind: "pull_request_review_comment",
+          pullRequestNumber: 12,
+          receivedAt: "2026-03-07T00:00:00.000Z",
+          repository: {
+            name: "Yamabiko",
+            owner: "ToaruPen",
+          },
+        },
+        mode: "suggest-only",
+        signal: {
+          hasBoundedChange: true,
+          hasConcreteTarget: false,
+          requiresHiddenContext: false,
+          requiresUnsafeSideEffects: false,
+          trustedExecution: false,
+        },
+      },
+    );
+
+    expect(result.actionability).toBe("ignore");
+    expect(result.duplicate).toBe(false);
+    expect(result.enqueued).toBe(false);
+    expect(result.runId).not.toBeNull();
+
+    if (result.runId === null) {
+      throw new Error("runId should not be null for ignored review feedback");
+    }
+
+    const savedRun = await reviewRunRepository.findById(result.runId);
+    expect(savedRun?.actionability).toBe("ignore");
+    expect(savedRun?.status).toBe("skipped");
+    expect(reviewJobQueue.snapshot()).toHaveLength(0);
   });
 
   it("ignores duplicate deliveries", async () => {
@@ -145,7 +199,7 @@ describe("ingestReviewEvent", () => {
           pullRequestNumber: 12,
           receivedAt: "2026-03-07T00:00:00.000Z",
           repository: {
-            name: "Call-n-Response",
+            name: "Yamabiko",
             owner: "ToaruPen",
           },
         },

@@ -1,19 +1,16 @@
 import { afterEach, describe, expect, it } from "vitest";
-
-import { InMemoryDeliveryRepository } from "../../../../src/adapters/persistence/in-memory-delivery-repository.js";
-import { InMemoryReviewRunRepository } from "../../../../src/adapters/persistence/in-memory-review-run-repository.js";
-import { InMemoryReviewJobQueue } from "../../../../src/adapters/queue/in-memory-review-job-queue.js";
-import { buildServer } from "../../../../src/entrypoints/http/build-server.js";
 import {
   issueCommentPayload,
   pullRequestReviewCommentPayload,
 } from "../../../fixtures/webhooks/index.js";
+import {
+  createTestServer,
+  TEST_WEBHOOK_SECRET,
+} from "../../../helpers/create-test-server.js";
 import { signPayload } from "../../../helpers/sign-payload.js";
 
-const webhookSecret = "test-webhook-secret";
-
 describe("webhook route", () => {
-  const servers = new Set<ReturnType<typeof buildServer>>();
+  const servers = new Set<ReturnType<typeof createTestServer>["server"]>();
 
   afterEach(async () => {
     await Promise.all(
@@ -24,25 +21,9 @@ describe("webhook route", () => {
     servers.clear();
   });
 
-  function createServer(): ReturnType<typeof buildServer> {
-    const server = buildServer(
-      {
-        DATABASE_URL:
-          "postgresql://postgres:postgres@localhost:5432/call_n_response",
-        HOST: "127.0.0.1",
-        PORT: "3000",
-        RUN_MODE: "dry-run",
-        WEBHOOK_SECRET: webhookSecret,
-      },
-      {
-        deliveryRepository: new InMemoryDeliveryRepository(),
-        reviewJobQueue: new InMemoryReviewJobQueue(),
-        reviewRunRepository: new InMemoryReviewRunRepository(),
-      },
-    );
-
+  function createServer(): ReturnType<typeof createTestServer>["server"] {
+    const { server } = createTestServer();
     servers.add(server);
-
     return server;
   }
 
@@ -54,7 +35,7 @@ describe("webhook route", () => {
       headers: {
         "content-type": "application/json",
         "x-github-event": "pull_request_review_comment",
-        "x-hub-signature-256": signPayload(webhookSecret, payload),
+        "x-hub-signature-256": signPayload(TEST_WEBHOOK_SECRET, payload),
       },
       method: "POST",
       payload,
@@ -76,7 +57,7 @@ describe("webhook route", () => {
       headers: {
         "content-type": "application/json",
         "x-github-delivery": "delivery-123",
-        "x-hub-signature-256": signPayload(webhookSecret, payload),
+        "x-hub-signature-256": signPayload(TEST_WEBHOOK_SECRET, payload),
       },
       method: "POST",
       payload,
@@ -144,7 +125,7 @@ describe("webhook route", () => {
         "content-type": "application/json",
         "x-github-delivery": "delivery-ignored",
         "x-github-event": "ping",
-        "x-hub-signature-256": signPayload(webhookSecret, payload),
+        "x-hub-signature-256": signPayload(TEST_WEBHOOK_SECRET, payload),
       },
       method: "POST",
       payload,
@@ -163,7 +144,7 @@ describe("webhook route", () => {
         "content-type": "application/json",
         "x-github-delivery": "delivery-valid",
         "x-github-event": "pull_request_review_comment",
-        "x-hub-signature-256": signPayload(webhookSecret, payload),
+        "x-hub-signature-256": signPayload(TEST_WEBHOOK_SECRET, payload),
       },
       method: "POST",
       payload,
@@ -193,7 +174,7 @@ describe("webhook route", () => {
       "content-type": "application/json",
       "x-github-delivery": "delivery-duplicate",
       "x-github-event": "pull_request_review_comment",
-      "x-hub-signature-256": signPayload(webhookSecret, payload),
+      "x-hub-signature-256": signPayload(TEST_WEBHOOK_SECRET, payload),
     };
 
     await server.inject({

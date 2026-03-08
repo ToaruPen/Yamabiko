@@ -10,10 +10,6 @@ interface HeaderValidationError {
   statusCode: 400 | 401;
 }
 
-interface RequestWithRawBody {
-  rawBody: string;
-}
-
 interface WebhookHeaders {
   deliveryId: string;
   eventType: string;
@@ -34,13 +30,19 @@ export async function webhookRoute(server: FastifyInstance): Promise<void> {
       });
     }
 
-    const rawBody = (request as unknown as RequestWithRawBody).rawBody;
+    const rawBody = extractRawBody(request);
+    if (rawBody === null) {
+      return reply.code(500).send({
+        message: "Raw body capture is not configured",
+        status: "error",
+      });
+    }
+
     const isValidSignature = await verifyWebhookSignature(
       server.config.webhookSecret,
       rawBody,
       headers.signature,
     );
-
     if (!isValidSignature) {
       return reply.code(401).send({
         message: "Invalid signature",
@@ -48,10 +50,9 @@ export async function webhookRoute(server: FastifyInstance): Promise<void> {
       });
     }
 
-    const action = (request.body as WebhookPayload).action;
     const event = normalizeWebhookEvent(
       headers.eventType,
-      action ?? "",
+      extractAction(request),
       request.body,
     );
 
@@ -87,8 +88,15 @@ export async function webhookRoute(server: FastifyInstance): Promise<void> {
       status: "accepted",
     });
   });
-
   await Promise.resolve();
+}
+
+function extractRawBody(request: FastifyRequest): string | null {
+  return request.rawBody ?? null;
+}
+
+function extractAction(request: FastifyRequest): string {
+  return (request.body as WebhookPayload).action ?? "";
 }
 
 function parseWebhookHeaders(

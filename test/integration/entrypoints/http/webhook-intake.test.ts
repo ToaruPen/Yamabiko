@@ -1,25 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-
-import { InMemoryDeliveryRepository } from "../../../../src/adapters/persistence/in-memory-delivery-repository.js";
-import { InMemoryReviewRunRepository } from "../../../../src/adapters/persistence/in-memory-review-run-repository.js";
-import { InMemoryReviewJobQueue } from "../../../../src/adapters/queue/in-memory-review-job-queue.js";
-import { buildServer } from "../../../../src/entrypoints/http/build-server.js";
 import {
   issueCommentPayload,
   pullRequestReviewCommentPayload,
   pullRequestReviewPayload,
 } from "../../../fixtures/webhooks/index.js";
+import {
+  createSignedWebhookRequest,
+  createTestServer,
+  TEST_WEBHOOK_SECRET,
+} from "../../../helpers/create-test-server.js";
 import { signPayload } from "../../../helpers/sign-payload.js";
-
-const WEBHOOK_SECRET = "integration-test-secret";
-
-const ENV = {
-  DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/call_n_response",
-  HOST: "127.0.0.1",
-  PORT: "3000",
-  RUN_MODE: "dry-run",
-  WEBHOOK_SECRET,
-} as const;
 
 interface AcceptedResponseBody {
   actionability: "suggest" | "ignore" | "apply";
@@ -29,43 +19,24 @@ interface AcceptedResponseBody {
 }
 
 describe("webhook intake integration", () => {
-  let deliveryRepository: InMemoryDeliveryRepository;
-  let reviewRunRepository: InMemoryReviewRunRepository;
-  let reviewJobQueue: InMemoryReviewJobQueue;
-  let server: ReturnType<typeof buildServer> | null = null;
+  let deliveryRepository: ReturnType<
+    typeof createTestServer
+  >["deliveryRepository"];
+  let reviewRunRepository: ReturnType<
+    typeof createTestServer
+  >["reviewRunRepository"];
+  let reviewJobQueue: ReturnType<typeof createTestServer>["reviewJobQueue"];
+  let server: ReturnType<typeof createTestServer>["server"] | null = null;
 
   function createServer(): void {
-    deliveryRepository = new InMemoryDeliveryRepository();
-    reviewRunRepository = new InMemoryReviewRunRepository();
-    reviewJobQueue = new InMemoryReviewJobQueue();
-    server = buildServer(ENV, {
-      deliveryRepository,
-      reviewJobQueue,
-      reviewRunRepository,
-    });
+    const context = createTestServer();
+    deliveryRepository = context.deliveryRepository;
+    reviewRunRepository = context.reviewRunRepository;
+    reviewJobQueue = context.reviewJobQueue;
+    server = context.server;
   }
 
-  function createSignedWebhookRequest(
-    payload: unknown,
-    deliveryId: string,
-    eventType: string,
-  ): {
-    headers: Record<string, string>;
-    payload: string;
-  } {
-    const body = JSON.stringify(payload);
-    return {
-      headers: {
-        "content-type": "application/json",
-        "x-github-delivery": deliveryId,
-        "x-github-event": eventType,
-        "x-hub-signature-256": signPayload(WEBHOOK_SECRET, body),
-      },
-      payload: body,
-    };
-  }
-
-  function getServer(): ReturnType<typeof buildServer> {
+  function getServer(): ReturnType<typeof createTestServer>["server"] {
     if (server === null) {
       throw new Error("Server is not initialized");
     }
@@ -125,6 +96,7 @@ describe("webhook intake integration", () => {
     expect(savedRun).not.toBeNull();
     expect(savedRun?.event.kind).toBe("pull_request_review");
     expect(savedRun?.event.headSha).toBe("abc123def456");
+    expect(savedRun?.status).toBe("pending");
 
     const jobs = reviewJobQueue.snapshot();
     expect(jobs).toHaveLength(1);
@@ -136,7 +108,7 @@ describe("webhook intake integration", () => {
     expect(job).toMatchObject({
       headSha: "abc123def456",
       pullRequestNumber: 42,
-      repositoryName: "call-n-response",
+      repositoryName: "yamabiko",
       repositoryOwner: "ToaruPen",
       runId: responseBody.runId,
     });
@@ -187,6 +159,7 @@ describe("webhook intake integration", () => {
     expect(savedRun).not.toBeNull();
     expect(savedRun?.event.kind).toBe("issue_comment");
     expect(savedRun?.event.headSha).toBeNull();
+    expect(savedRun?.status).toBe("skipped");
 
     expect(reviewJobQueue.snapshot()).toHaveLength(0);
   });
@@ -237,6 +210,7 @@ describe("webhook intake integration", () => {
     const savedRun = await reviewRunRepository.findById(responseBody.runId);
     expect(savedRun).not.toBeNull();
     expect(savedRun?.event.kind).toBe("pull_request_review_comment");
+    expect(savedRun?.status).toBe("pending");
 
     const jobs = reviewJobQueue.snapshot();
     expect(jobs).toHaveLength(1);
@@ -288,7 +262,7 @@ describe("webhook intake integration", () => {
       headers: {
         "content-type": "application/json",
         "x-github-event": "pull_request_review_comment",
-        "x-hub-signature-256": signPayload(WEBHOOK_SECRET, body),
+        "x-hub-signature-256": signPayload(TEST_WEBHOOK_SECRET, body),
       },
       method: "POST",
       payload: body,
@@ -316,7 +290,7 @@ describe("webhook intake integration", () => {
       headers: {
         "content-type": "application/json",
         "x-github-delivery": "delivery-missing-event",
-        "x-hub-signature-256": signPayload(WEBHOOK_SECRET, body),
+        "x-hub-signature-256": signPayload(TEST_WEBHOOK_SECRET, body),
       },
       method: "POST",
       payload: body,

@@ -10,3 +10,13 @@ pre-commit:
     eslint:
       run: pnpm lint:eslint
       priority: 2
+    typecheck:
+      run: pnpm typecheck
+      priority: 3
+
+pre-push:
+  piped: true
+  commands:
+    test:
+      run: pnpm test
+      priority: 1

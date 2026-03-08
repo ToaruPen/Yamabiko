@@ -1,5 +1,5 @@
 {
-  "id": "aa10964f-4ba9-4e50-a4d4-c71d6b8a46f8",
+  "id": "3f73d186-07d0-4abf-84cd-aada47222bfa",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -46,11 +46,23 @@
           "primaryKey": false,
           "notNull": true
         },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
+        },
+        "error_message": {
+          "name": "error_message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "head_sha": {
           "name": "head_sha",
@@ -94,6 +106,20 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "run_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
         }
       },
       "indexes": {},
@@ -159,6 +185,11 @@
       "name": "run_mode",
       "schema": "public",
       "values": ["dry-run", "suggest-only", "push-enabled"]
+    },
+    "public.run_status": {
+      "name": "run_status",
+      "schema": "public",
+      "values": ["pending", "processing", "completed", "failed", "skipped"]
     }
   },
   "schemas": {},

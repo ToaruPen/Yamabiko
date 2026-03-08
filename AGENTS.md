@@ -1,14 +1,18 @@
 # AGENTS.md
 
 ## WHY
-- Call-n-Response is a GitHub App-first backend for ingesting PR review bot feedback and turning it into safe suggestions or fixes.
+- Yamabiko is a GitHub App-first backend for ingesting PR review bot feedback and turning it into safe suggestions or fixes.
 - The canonical stack, architecture, and safety decisions live in `README.md` and `.sisyphus/plans/0001-initial-stack.md`.
 
 ## WHAT
 - `src/`: application code and architecture layers. See `src/AGENTS.md`.
+  - `src/entrypoints/worker/`: pg-boss consumer that processes queued review jobs.
+  - `src/workers/`: job handler, dead-letter handler, failure classification, and structured job logging.
+  - `src/adapters/queue/`: `ReviewJobQueue` port implementations (pg-boss and in-memory).
+  - `src/application/ports/`: inward-facing interfaces including `ReviewRunRepository` (with atomic `claimForProcessing`).
 - `test/`: unit and integration coverage. See `test/AGENTS.md`.
-- `.sisyphus/`: plans and decision records. See `.sisyphus/AGENTS.md`.
-- `docker/`, `drizzle/`, `scripts/`: infrastructure and workflow helpers with scoped guidance.
+- `.sisyphus/`: plans, decision records, and developer scripts. See `.sisyphus/AGENTS.md`.
+- `docker/`, `drizzle/`: infrastructure and workflow helpers with scoped guidance.
 
 ## HARD RULES
 - Keep `Biome` as the formatter/import organizer and `ESLint` as the type-aware lint owner unless the documented quality bar changes.

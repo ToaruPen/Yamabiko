@@ -10,7 +10,7 @@ export const issueCommentPayload = {
     pull_request: { url: "https://api.github.com/repos/owner/repo/pulls/42" },
   },
   repository: {
-    name: "call-n-response",
+    name: "yamabiko",
     owner: { login: "ToaruPen" },
   },
   sender: { login: "codex-bot" },

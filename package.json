@@ -1,5 +1,5 @@
 {
-  "name": "call-n-response",
+  "name": "yamabiko",
   "version": "0.1.0",
   "private": true,
   "description": "Event-driven automation for responding to GitHub PR review feedback.",
@@ -20,7 +20,8 @@
     "lint": "pnpm lint:biome && pnpm lint:eslint && pnpm typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "pnpm lint && pnpm test"
+    "check": "pnpm lint && pnpm test",
+    "simplify": "bash .sisyphus/scripts/simplify.sh"
   },
   "dependencies": {
     "@octokit/webhooks": "^14.2.0",
