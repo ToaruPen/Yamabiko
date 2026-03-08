@@ -107,13 +107,19 @@ The initial webhook intake slice is implemented:
 - Idempotent delivery handling keyed by `X-GitHub-Delivery`
 - Review run creation with actionability classification and queue handoff for actionable events
 - pg-boss worker runtime with run status transitions, retry classification, stale-run recovery, and dead-letter handling
-- 95 tests in the suite, including worker integration tests that run when `DATABASE_URL` is set
+- 95 tests in the suite, including worker integration tests that run when `TEST_DATABASE_URL` is set
 
 Current runtime wiring is split:
 
 - `src/entrypoints/http/server.ts` still boots the HTTP server with in-memory adapters by default
 - `src/entrypoints/worker/main.ts` uses PostgreSQL + Drizzle + pg-boss
-- `test/integration/workers/` exercises the real worker path when a PostgreSQL `DATABASE_URL` is available (CI provides one)
+- `test/integration/workers/` exercises the real worker path when a PostgreSQL `TEST_DATABASE_URL` is available (CI provides one)
+
+The next planned slice is review context enrichment before GitHub write-back:
+
+- persist inline review comment context such as `commentId`, `reviewId`, `path`, `line`, and author type/bot metadata
+- extend the GitHub adapter so the worker can fetch PR review comments, not just react to webhook payloads
+- use that richer context as the input to Phase 4 policy evaluation and suggestion generation
 
 Phase 4 (policy evaluation and GitHub write-back) and Phase 5 (deterministic apply path) are still ahead.
 
