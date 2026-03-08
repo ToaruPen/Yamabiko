@@ -191,10 +191,14 @@ function assertSafeTestDatabaseUrl(connectionString: string): void {
 
   const parsed = new URL(connectionString);
   const databaseName = parsed.pathname.replace(/^\//, "");
-  const isLocalhost =
-    parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
+  const isAllowedTestHost =
+    parsed.hostname === "localhost" ||
+    parsed.hostname === "127.0.0.1" ||
+    parsed.hostname === "postgres" ||
+    parsed.hostname === "db" ||
+    parsed.hostname === "postgresql";
 
-  if (!isLocalhost || !databaseName.includes("test")) {
+  if (!isAllowedTestHost || !databaseName.includes("test")) {
     throw new Error(
       `Unsafe worker test database target: ${parsed.hostname}/${databaseName}`,
     );
