@@ -128,7 +128,7 @@ Phase 4 (policy evaluation and GitHub write-back) and Phase 5 (deterministic app
 
 ```bash
 pnpm install
-pnpm test       # unit tests + HTTP integration tests; worker integration tests run when DATABASE_URL is set
+pnpm test       # unit tests + HTTP integration tests; worker integration tests run when TEST_DATABASE_URL is set
 pnpm lint       # Biome formatting + ESLint type-aware checks
 ```
 
@@ -139,7 +139,7 @@ export WEBHOOK_SECRET="your-webhook-secret"
 pnpm dev
 ```
 
-> **Note:** `pnpm dev` starts the HTTP server with in-memory adapters. `pnpm dev:worker` and the worker integration tests require a PostgreSQL `DATABASE_URL`.
+> **Note:** `pnpm dev` starts the HTTP server with in-memory adapters. `pnpm dev:worker` requires a PostgreSQL `DATABASE_URL`, while the worker integration tests require a dedicated PostgreSQL `TEST_DATABASE_URL`.
 
 The test suite covers webhook HMAC signature verification, idempotent deduplication via `X-GitHub-Delivery`, event normalization for all supported GitHub event types, and queue/worker lifecycle with a real PostgreSQL-backed pg-boss runtime when enabled.
 
