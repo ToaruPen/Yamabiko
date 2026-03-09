@@ -156,11 +156,16 @@ This is the smallest slice that creates a real system boundary and unlocks queue
 - `pnpm test`
 - route/integration tests with payload fixtures
 - schema and persistence behavior covered by automated tests
+- worker queue lifecycle integration tests when `DATABASE_URL` points to PostgreSQL
 
 ## Tracking Checklist
 
-- [ ] Phase 1: webhook intake and normalization
-- [ ] Phase 2: durable delivery and run persistence
+- [x] Phase 1: webhook intake and normalization
+- [x] Phase 2: delivery/run persistence and queue handoff are implemented in the application flow
 - [ ] Phase 3: queue integration and worker orchestration
+- [ ] Phase 3.5: review context enrichment for bot and inline comments
+  - persist `commentId`, `reviewId`, `path`, `line`, and author type/bot metadata alongside review runs
+  - extend the GitHub adapter to fetch PR review comments in addition to webhook-triggered payloads
+  - make enriched review context the default input to Phase 4 policy evaluation
 - [ ] Phase 4: policy evaluation and suggestion path
 - [ ] Phase 5: deterministic apply path
